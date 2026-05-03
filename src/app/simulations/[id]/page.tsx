@@ -25,11 +25,15 @@ export default function SimulationDetailPage() {
 
   // Intervention form state
   const [showInterventionForm, setShowInterventionForm] = useState(false);
-  const [presetType, setPresetType] = useState<string>("");
   const [interventionName, setInterventionName] = useState("");
-  const [startDay, setStartDay] = useState<number>(10);
-  const [endDay, setEndDay] = useState<number>(30);
-  const [intensity, setIntensity] = useState<number>(50);
+  
+  const [events, setEvents] = useState([{
+    presetType: "",
+    startDay: 10,
+    endDay: 30,
+    intensity: 50
+  }]);
+
   const [isRunningIntervention, setIsRunningIntervention] = useState(false);
 
   useEffect(() => {
@@ -45,9 +49,6 @@ export default function SimulationDetailPage() {
         if (simRes.data) setSimulation(simRes.data);
         if (intRes?.data) {
           setInterventions(intRes.data);
-          if (intRes.data.length > 0) {
-            setSelectedIntervention(intRes.data[0]);
-          }
         }
         if (presetsRes?.data) setPresets(presetsRes.data);
       } catch (err) {
@@ -59,29 +60,60 @@ export default function SimulationDetailPage() {
     fetch();
   }, [id]);
 
+  const handleSelectIntervention = async (int: InterventionSimulation) => {
+    if (selectedIntervention?.id === int.id) {
+      setSelectedIntervention(null);
+      return;
+    }
+
+    // If we already have the simulation data, just set it
+    if (int.data && int.data.days) {
+      setSelectedIntervention(int);
+      return;
+    }
+
+    try {
+      const res = await interventionService.getById(int.id);
+      if (res.data) {
+        setInterventions(prev => prev.map(item => item.id === int.id ? res.data! : item));
+        setSelectedIntervention(res.data);
+      }
+    } catch (err) {
+      toast.error("Failed to fetch intervention details");
+    }
+  };
+
   const handleRunIntervention = async () => {
-    if (!presetType || !simulation) return;
-    const preset = presets.find(p => p.type === presetType);
-    if (!preset) return;
+    if (!simulation) return;
+    
+    const validEvents = events.filter(e => e.presetType);
+    if (validEvents.length === 0) return;
     
     setIsRunningIntervention(true);
     try {
-      const res = await interventionService.run({
-        name: interventionName || `${preset.label} Intervention`,
-        simulation_id: simulation.id,
-        events: [{
-          day: startDay,
-          end_day: endDay,
+      const formattedEvents = validEvents.map(e => {
+        const preset = presets.find(p => p.type === e.presetType)!;
+        return {
+          day: e.startDay,
+          end_day: e.endDay,
           type: preset.type,
           label: preset.label,
-          intensity: intensity,
+          intensity: e.intensity,
           math_effect: preset.math_effect
-        }]
+        };
+      });
+
+      const res = await interventionService.run({
+        name: interventionName || `${formattedEvents.length} Event Intervention`,
+        simulation_id: simulation.id,
+        events: formattedEvents
       });
       if (res.data) {
         setInterventions(prev => [...prev, res.data!]);
         setSelectedIntervention(res.data);
         setShowInterventionForm(false);
+        setEvents([{ presetType: "", startDay: 10, endDay: 30, intensity: 50 }]);
+        setInterventionName("");
         toast.success("Intervention applied successfully!");
       }
     } catch (err) {
@@ -178,44 +210,97 @@ export default function SimulationDetailPage() {
 
           {showInterventionForm && presets.length > 0 && (
             <div className="p-6 border border-border rounded-xl bg-muted/20 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                <div className="space-y-2">
-                  <Label>Preset</Label>
-                  <select 
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    value={presetType}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setPresetType(v);
-                      const p = presets.find(x => x.type === v);
-                      if (p) setIntensity(p.default_intensity);
-                    }}
-                  >
-                    <option value="">Select a preset...</option>
-                    {presets.map(p => (
-                      <option key={p.type} value={p.type}>{p.label}</option>
-                    ))}
-                  </select>
+              <div className="space-y-4">
+                <div className="space-y-2 max-w-sm">
+                  <Label>Intervention Set Name</Label>
+                  <Input value={interventionName} onChange={e => setInterventionName(e.target.value)} placeholder="e.g. COVID + lockdown" />
                 </div>
-                <div className="space-y-2">
-                  <Label>Name</Label>
-                  <Input value={interventionName} onChange={e => setInterventionName(e.target.value)} placeholder="Name..." />
-                </div>
-                <div className="space-y-2">
-                  <Label>Start Day</Label>
-                  <Input type="number" value={startDay} onChange={e => setStartDay(Number(e.target.value))} min={0} />
-                </div>
-                <div className="space-y-2">
-                  <Label>End Day</Label>
-                  <Input type="number" value={endDay} onChange={e => setEndDay(Number(e.target.value))} min={startDay} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Intensity (%)</Label>
-                  <Input type="number" value={intensity} onChange={e => setIntensity(Number(e.target.value))} min={0} max={100} />
+                
+                <div className="space-y-4 border-t border-border pt-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-semibold">Events</Label>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setEvents([...events, { presetType: "", startDay: 10, endDay: 30, intensity: 50 }])}
+                    >
+                      <Plus size={14} className="mr-1" /> Add Event
+                    </Button>
+                  </div>
+                  
+                  {events.map((event, index) => (
+                    <div key={index} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 p-4 border border-border rounded-lg bg-card relative">
+                      {events.length > 1 && (
+                        <button 
+                          className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                          onClick={() => setEvents(events.filter((_, i) => i !== index))}
+                        >×</button>
+                      )}
+                      <div className="space-y-2">
+                        <Label>Preset</Label>
+                        <select 
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          value={event.presetType}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            const p = presets.find(x => x.type === v);
+                            const newEvents = [...events];
+                            newEvents[index].presetType = v;
+                            if (p) newEvents[index].intensity = p.default_intensity;
+                            setEvents(newEvents);
+                          }}
+                        >
+                          <option value="">Select a preset...</option>
+                          {presets.map(p => (
+                            <option key={p.type} value={p.type}>{p.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Start Day</Label>
+                        <Input 
+                          type="number" 
+                          value={event.startDay} 
+                          onChange={e => {
+                            const newEvents = [...events];
+                            newEvents[index].startDay = Number(e.target.value);
+                            setEvents(newEvents);
+                          }} 
+                          min={0} 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>End Day</Label>
+                        <Input 
+                          type="number" 
+                          value={event.endDay} 
+                          onChange={e => {
+                            const newEvents = [...events];
+                            newEvents[index].endDay = Number(e.target.value);
+                            setEvents(newEvents);
+                          }} 
+                          min={event.startDay} 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Intensity (%)</Label>
+                        <Input 
+                          type="number" 
+                          value={event.intensity} 
+                          onChange={e => {
+                            const newEvents = [...events];
+                            newEvents[index].intensity = Number(e.target.value);
+                            setEvents(newEvents);
+                          }} 
+                          min={0} max={100} 
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <div className="flex justify-end pt-2">
-                <Button onClick={handleRunIntervention} disabled={!presetType || isRunningIntervention}>
+              <div className="flex justify-end pt-4 border-t border-border">
+                <Button onClick={handleRunIntervention} disabled={!events.some(e => e.presetType) || isRunningIntervention}>
                   {isRunningIntervention ? "Running..." : "Run Intervention"}
                 </Button>
               </div>
@@ -230,7 +315,7 @@ export default function SimulationDetailPage() {
                   key={int.id} 
                   variant={selectedIntervention?.id === int.id ? "default" : "outline"} 
                   size="sm"
-                  onClick={() => setSelectedIntervention(int)}
+                  onClick={() => handleSelectIntervention(int)}
                 >
                   {selectedIntervention?.id === int.id && <Check size={14} className="mr-1.5" />}
                   {int.name}
