@@ -2,30 +2,94 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { SimulationChart } from "@/components/simulation/SimulationChart";
 import { SimulationStats } from "@/components/simulation/SimulationStats";
 import { simulationService } from "@/services/simulation.service";
+import { interventionService, InterventionSimulation, Preset } from "@/services/intervention.service";
 import { Simulation } from "@/types/simulation";
+import { toast } from "sonner";
 
 export default function SimulationDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const [simulation, setSimulation] = useState<Simulation | null>(null);
+  const [interventions, setInterventions] = useState<InterventionSimulation[]>([]);
+  const [presets, setPresets] = useState<Preset[]>([]);
+  const [selectedIntervention, setSelectedIntervention] = useState<InterventionSimulation | null>(null);
+  const [mergeChart, setMergeChart] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Intervention form state
+  const [showInterventionForm, setShowInterventionForm] = useState(false);
+  const [presetType, setPresetType] = useState<string>("");
+  const [interventionName, setInterventionName] = useState("");
+  const [startDay, setStartDay] = useState<number>(10);
+  const [endDay, setEndDay] = useState<number>(30);
+  const [intensity, setIntensity] = useState<number>(50);
+  const [isRunningIntervention, setIsRunningIntervention] = useState(false);
 
   useEffect(() => {
     async function fetch() {
       try {
-        const response = await simulationService.getById(Number(id));
-        if (response.data) setSimulation(response.data);
+        const simId = Number(id);
+        const [simRes, intRes, presetsRes] = await Promise.all([
+          simulationService.getById(simId),
+          interventionService.getBySimulationId(simId).catch(() => ({ data: [] })),
+          interventionService.getPresets().catch(() => ({ data: [] })),
+        ]);
+        
+        if (simRes.data) setSimulation(simRes.data);
+        if (intRes?.data) {
+          setInterventions(intRes.data);
+          if (intRes.data.length > 0) {
+            setSelectedIntervention(intRes.data[0]);
+          }
+        }
+        if (presetsRes?.data) setPresets(presetsRes.data);
+      } catch (err) {
+        console.error(err);
       } finally {
         setIsLoading(false);
       }
     }
     fetch();
   }, [id]);
+
+  const handleRunIntervention = async () => {
+    if (!presetType || !simulation) return;
+    const preset = presets.find(p => p.type === presetType);
+    if (!preset) return;
+    
+    setIsRunningIntervention(true);
+    try {
+      const res = await interventionService.run({
+        name: interventionName || `${preset.label} Intervention`,
+        simulation_id: simulation.id,
+        events: [{
+          day: startDay,
+          end_day: endDay,
+          type: preset.type,
+          label: preset.label,
+          intensity: intensity,
+          math_effect: preset.math_effect
+        }]
+      });
+      if (res.data) {
+        setInterventions(prev => [...prev, res.data!]);
+        setSelectedIntervention(res.data);
+        setShowInterventionForm(false);
+        toast.success("Intervention applied successfully!");
+      }
+    } catch (err) {
+      toast.error("Failed to run intervention");
+    } finally {
+      setIsRunningIntervention(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -96,9 +160,96 @@ export default function SimulationDetailPage() {
 
         {/* Stats Grid */}
         <SimulationStats
-          stats={simulation.stats}
+          stats={selectedIntervention && !mergeChart ? selectedIntervention.stats : simulation.stats}
           population={simulation.parameters.population}
         />
+
+        {/* Interventions Section */}
+        <div className="p-8 border border-border rounded-2xl bg-card space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
+              Interventions
+            </h3>
+            <Button size="sm" onClick={() => setShowInterventionForm(!showInterventionForm)}>
+              <Plus size={16} className="mr-2" />
+              Add Intervention
+            </Button>
+          </div>
+
+          {showInterventionForm && presets.length > 0 && (
+            <div className="p-6 border border-border rounded-xl bg-muted/20 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="space-y-2">
+                  <Label>Preset</Label>
+                  <select 
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={presetType}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setPresetType(v);
+                      const p = presets.find(x => x.type === v);
+                      if (p) setIntensity(p.default_intensity);
+                    }}
+                  >
+                    <option value="">Select a preset...</option>
+                    {presets.map(p => (
+                      <option key={p.type} value={p.type}>{p.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Name</Label>
+                  <Input value={interventionName} onChange={e => setInterventionName(e.target.value)} placeholder="Name..." />
+                </div>
+                <div className="space-y-2">
+                  <Label>Start Day</Label>
+                  <Input type="number" value={startDay} onChange={e => setStartDay(Number(e.target.value))} min={0} />
+                </div>
+                <div className="space-y-2">
+                  <Label>End Day</Label>
+                  <Input type="number" value={endDay} onChange={e => setEndDay(Number(e.target.value))} min={startDay} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Intensity (%)</Label>
+                  <Input type="number" value={intensity} onChange={e => setIntensity(Number(e.target.value))} min={0} max={100} />
+                </div>
+              </div>
+              <div className="flex justify-end pt-2">
+                <Button onClick={handleRunIntervention} disabled={!presetType || isRunningIntervention}>
+                  {isRunningIntervention ? "Running..." : "Run Intervention"}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {interventions.length > 0 && (
+            <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-border">
+              <span className="text-sm font-medium">Applied Interventions:</span>
+              {interventions.map(int => (
+                <Button 
+                  key={int.id} 
+                  variant={selectedIntervention?.id === int.id ? "default" : "outline"} 
+                  size="sm"
+                  onClick={() => setSelectedIntervention(int)}
+                >
+                  {selectedIntervention?.id === int.id && <Check size={14} className="mr-1.5" />}
+                  {int.name}
+                </Button>
+              ))}
+
+              <div className="ml-auto flex items-center gap-2">
+                <Label htmlFor="merge-toggle" className="text-sm cursor-pointer">Compare with Base</Label>
+                <input 
+                  id="merge-toggle"
+                  type="checkbox" 
+                  className="w-4 h-4 rounded border-gray-300"
+                  checked={mergeChart} 
+                  onChange={e => setMergeChart(e.target.checked)} 
+                />
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Main Content Area */}
         <div className="grid grid-cols-1 gap-8">
@@ -106,7 +257,7 @@ export default function SimulationDetailPage() {
           <div className="p-8 border border-border rounded-2xl bg-card space-y-8">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
-                Epidemic Growth Curve
+                Epidemic Growth Curve {selectedIntervention && !mergeChart ? "(Intervention)" : ""}
               </h3>
               <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest">
                 <div className="flex items-center gap-1.5">
@@ -130,6 +281,8 @@ export default function SimulationDetailPage() {
               <SimulationChart
                 data={simulation.data}
                 modelType={simulation.model_type}
+                interventionData={selectedIntervention?.data}
+                merge={mergeChart}
               />
             </div>
           </div>

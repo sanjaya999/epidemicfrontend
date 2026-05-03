@@ -15,13 +15,15 @@ import { SimulationData, ModelType } from "@/types/simulation";
 interface SimulationChartProps {
   data: SimulationData;
   modelType: ModelType;
+  interventionData?: SimulationData;
+  merge?: boolean;
 }
 
 const CHART_COLORS = {
-  susceptible: "var(--color-susceptible)",
-  infected: "var(--color-infected)",
-  recovered: "var(--color-recovered)",
-  exposed: "var(--color-exposed)",
+  susceptible: "var(--color-susceptible, #3b82f6)",
+  infected: "var(--color-infected, #ef4444)",
+  recovered: "var(--color-recovered, #22c55e)",
+  exposed: "var(--color-exposed, #f59e0b)",
 };
 
 function formatPopulation(value: number): string {
@@ -30,14 +32,36 @@ function formatPopulation(value: number): string {
   return value.toString();
 }
 
-export function SimulationChart({ data, modelType }: SimulationChartProps) {
-  const chartData = data.days.map((day, i) => ({
-    day,
-    susceptible: Math.round(data.susceptible[i]),
-    infected: Math.round(data.infected[i]),
-    recovered: Math.round(data.recovered[i]),
-    ...(data.exposed ? { exposed: Math.round(data.exposed[i]) } : {}),
-  }));
+export function SimulationChart({ data, modelType, interventionData, merge }: SimulationChartProps) {
+  // If we only have intervention data to show (merge is false), use it as main data
+  const mainData = (interventionData && !merge) ? interventionData : data;
+  
+  const maxLength = Math.max(
+    mainData.days.length,
+    (merge && interventionData) ? interventionData.days.length : 0
+  );
+
+  const chartData = Array.from({ length: maxLength }).map((_, i) => {
+    const day = i;
+    const baseObj = {
+      day,
+      susceptible: Math.round(mainData.susceptible[i] ?? 0),
+      infected: Math.round(mainData.infected[i] ?? 0),
+      recovered: Math.round(mainData.recovered[i] ?? 0),
+      ...(mainData.exposed ? { exposed: Math.round(mainData.exposed[i] ?? 0) } : {}),
+    };
+
+    if (interventionData && merge) {
+      return {
+        ...baseObj,
+        i_susceptible: Math.round(interventionData.susceptible[i] ?? 0),
+        i_infected: Math.round(interventionData.infected[i] ?? 0),
+        i_recovered: Math.round(interventionData.recovered[i] ?? 0),
+        ...(interventionData.exposed ? { i_exposed: Math.round(interventionData.exposed[i] ?? 0) } : {}),
+      };
+    }
+    return baseObj;
+  });
 
   return (
     <ResponsiveContainer width="100%" height={380}>
@@ -91,9 +115,10 @@ export function SimulationChart({ data, modelType }: SimulationChartProps) {
             paddingTop: "16px",
           }}
         />
-        {modelType === "SEIR" && data.exposed && (
+        {modelType === "SEIR" && (merge ? mainData.exposed || interventionData?.exposed : mainData.exposed) && (
           <Line
             type="monotone"
+            name={merge ? "Exposed (Normal)" : "Exposed"}
             dataKey="exposed"
             stroke={CHART_COLORS.exposed}
             strokeWidth={1.5}
@@ -103,6 +128,7 @@ export function SimulationChart({ data, modelType }: SimulationChartProps) {
         )}
         <Line
           type="monotone"
+          name={merge ? "Susceptible (Normal)" : "Susceptible"}
           dataKey="susceptible"
           stroke={CHART_COLORS.susceptible}
           strokeWidth={1.5}
@@ -111,6 +137,7 @@ export function SimulationChart({ data, modelType }: SimulationChartProps) {
         />
         <Line
           type="monotone"
+          name={merge ? "Infected (Normal)" : "Infected"}
           dataKey="infected"
           stroke={CHART_COLORS.infected}
           strokeWidth={1.5}
@@ -119,12 +146,60 @@ export function SimulationChart({ data, modelType }: SimulationChartProps) {
         />
         <Line
           type="monotone"
+          name={merge ? "Recovered (Normal)" : "Recovered"}
           dataKey="recovered"
           stroke={CHART_COLORS.recovered}
           strokeWidth={1.5}
           dot={false}
           activeDot={{ r: 3 }}
         />
+        
+        {merge && interventionData && (
+          <>
+            {modelType === "SEIR" && interventionData.exposed && (
+              <Line
+                type="monotone"
+                name="Exposed (Intervention)"
+                dataKey="i_exposed"
+                stroke={CHART_COLORS.exposed}
+                strokeWidth={1.5}
+                strokeDasharray="5 5"
+                dot={false}
+                activeDot={{ r: 3 }}
+              />
+            )}
+            <Line
+              type="monotone"
+              name="Susceptible (Intervention)"
+              dataKey="i_susceptible"
+              stroke={CHART_COLORS.susceptible}
+              strokeWidth={1.5}
+              strokeDasharray="5 5"
+              dot={false}
+              activeDot={{ r: 3 }}
+            />
+            <Line
+              type="monotone"
+              name="Infected (Intervention)"
+              dataKey="i_infected"
+              stroke={CHART_COLORS.infected}
+              strokeWidth={1.5}
+              strokeDasharray="5 5"
+              dot={false}
+              activeDot={{ r: 3 }}
+            />
+            <Line
+              type="monotone"
+              name="Recovered (Intervention)"
+              dataKey="i_recovered"
+              stroke={CHART_COLORS.recovered}
+              strokeWidth={1.5}
+              strokeDasharray="5 5"
+              dot={false}
+              activeDot={{ r: 3 }}
+            />
+          </>
+        )}
       </LineChart>
     </ResponsiveContainer>
   );
