@@ -34,6 +34,7 @@ export interface Simulation {
   stats: SimulationStats;
   data: SimulationData;
   created_at: string;
+  is_public?: boolean;
 }
 
 export interface SimulationSummary {
@@ -43,6 +44,11 @@ export interface SimulationSummary {
   parameters: SimulationParameters;
   stats: SimulationStats;
   created_at: string;
+  is_public?: boolean;
+}
+
+export interface PublicSimulationEntry {
+  id: number;
 }
 
 export interface RunSimulationRequest {
@@ -61,4 +67,8 @@ export interface APIResponse<T> {
   success: boolean;
   message: string;
   data?: T;
+}
+
+export interface AIAnalysis {
+  analysis: string;
 }

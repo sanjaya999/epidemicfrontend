@@ -17,6 +17,7 @@ interface SimulationChartProps {
   modelType: ModelType;
   interventionData?: SimulationData;
   merge?: boolean;
+  height?: number;
 }
 
 const CHART_COLORS = {
@@ -32,7 +33,7 @@ function formatPopulation(value: number): string {
   return value.toString();
 }
 
-export function SimulationChart({ data, modelType, interventionData, merge }: SimulationChartProps) {
+export function SimulationChart({ data, modelType, interventionData, merge, height = 380 }: SimulationChartProps) {
   // If we only have intervention data to show (merge is false), use it as main data
   const mainData = (interventionData && !merge) ? interventionData : data;
   
@@ -64,7 +65,7 @@ export function SimulationChart({ data, modelType, interventionData, merge }: Si
   });
 
   return (
-    <ResponsiveContainer width="100%" height={380}>
+    <ResponsiveContainer width="100%" height={height}>
       <LineChart
         data={chartData}
         margin={{ top: 8, right: 16, left: 0, bottom: 8 }}

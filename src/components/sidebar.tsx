@@ -9,7 +9,7 @@ import { useUserStore } from "@/store/use-user-store";
 import { authService } from "@/services/auth.service";
 import { 
   LayoutDashboard, 
-  History, 
+  Folder,
   FlaskConical,
   BarChart3,
   LogOut,
@@ -28,9 +28,9 @@ const sidebarItems = [
     icon: FlaskConical,
   },
   {
-    title: "History",
+    title: "My simulations",
     href: "/history",
-    icon: History,
+    icon: Folder,
   },
   {
     title: "Analytics",

@@ -3,14 +3,14 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Trash2, History as HistoryIcon, ArrowRight } from "lucide-react";
+import { Trash2, History as HistoryIcon, ArrowRight, Globe, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { simulationService } from "@/services/simulation.service";
 import { useSimulationStore } from "@/store/use-simulation-store";
 
 export default function HistoryPage() {
   const router = useRouter();
-  const { simulations, setSimulations, removeSimulation, isLoading, setLoading } =
+  const { simulations, setSimulations, removeSimulation, updateSimulation, isLoading, setLoading } =
     useSimulationStore();
 
   useEffect(() => {
@@ -34,6 +34,19 @@ export default function HistoryPage() {
       toast.success("Simulation deleted");
     } catch {
       toast.error("Failed to delete simulation");
+    }
+  }
+
+  async function handleToggleVisibility(id: number, current: boolean | undefined, e: React.MouseEvent) {
+    e.stopPropagation();
+    try {
+      const res = await simulationService.updateVisibility(id, !current);
+      if (res.data) {
+        updateSimulation(id, { is_public: res.data.is_public });
+        toast.success(res.data.is_public ? "Simulation is now public" : "Simulation is now private");
+      }
+    } catch {
+      toast.error("Failed to update visibility");
     }
   }
 
@@ -115,6 +128,18 @@ export default function HistoryPage() {
                   <p className="text-[10px] text-muted-foreground uppercase tracking-tighter">Created</p>
                 </div>
                 <div className="flex items-center gap-1">
+                  <button
+                    onClick={(e) => handleToggleVisibility(sim.id, sim.is_public, e)}
+                    className={cn(
+                      "h-9 w-9 flex items-center justify-center rounded-md transition-colors",
+                      sim.is_public
+                        ? "text-green-500 hover:text-green-600 hover:bg-green-50"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    )}
+                    title={sim.is_public ? "Set private" : "Set public"}
+                  >
+                    {sim.is_public ? <Globe size={15} /> : <Lock size={15} />}
+                  </button>
                   <Button
                     variant="ghost"
                     size="icon"

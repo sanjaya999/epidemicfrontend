@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Check } from "lucide-react";
+import { ArrowLeft, Plus, Check, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +35,28 @@ export default function SimulationDetailPage() {
   }]);
 
   const [isRunningIntervention, setIsRunningIntervention] = useState(false);
+
+  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showAnalysis, setShowAnalysis] = useState(false);
+
+  const handleAnalyze = async () => {
+    if (!simulation) return;
+    setIsAnalyzing(true);
+    try {
+      const res = await simulationService.analyze(simulation.id);
+      if (res.success && res.data) {
+        setAiAnalysis(res.data.analysis);
+        setShowAnalysis(true);
+      } else {
+        toast.error(res.message || "Failed to get AI analysis");
+      }
+    } catch {
+      toast.error("Failed to connect to AI service");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   useEffect(() => {
     async function fetch() {
@@ -195,6 +217,33 @@ export default function SimulationDetailPage() {
           stats={selectedIntervention && !mergeChart ? selectedIntervention.stats : simulation.stats}
           population={simulation.parameters.population}
         />
+
+        {/* AI Analysis Section */}
+        <div className="p-8 border border-border rounded-2xl bg-card space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
+              AI Analysis
+            </h3>
+            <div className="flex items-center gap-2">
+              {showAnalysis && (
+                <Button size="sm" variant="ghost" onClick={() => setShowAnalysis(false)}>
+                  <X size={16} className="mr-1" /> Hide
+                </Button>
+              )}
+              <Button size="sm" onClick={handleAnalyze} disabled={isAnalyzing}>
+                <Sparkles size={16} className="mr-2" />
+                {isAnalyzing ? "Analyzing..." : "Analyze with AI"}
+              </Button>
+            </div>
+          </div>
+          {showAnalysis && aiAnalysis && (
+            <div className="p-6 border border-border rounded-xl bg-muted/20">
+              <p className="text-sm leading-relaxed whitespace-pre-line text-foreground/90">
+                {aiAnalysis}
+              </p>
+            </div>
+          )}
+        </div>
 
         {/* Interventions Section */}
         <div className="p-8 border border-border rounded-2xl bg-card space-y-6">
