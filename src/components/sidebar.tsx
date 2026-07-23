@@ -1,19 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useUserStore } from "@/store/use-user-store";
-import { authService } from "@/services/auth.service";
-import { 
-  LayoutDashboard, 
-  History, 
+import { useAuth } from "@/components/auth-provider";
+import { Logo } from "@/components/logo";
+import {
+  LayoutDashboard,
+  Folder,
   FlaskConical,
   BarChart3,
+  CircleDot,
   LogOut,
-  User as UserIcon
+  User as UserIcon,
+  ShieldCheck,
 } from "lucide-react";
 
 const sidebarItems = [
@@ -28,9 +29,14 @@ const sidebarItems = [
     icon: FlaskConical,
   },
   {
-    title: "History",
+    title: "Outbreak Lab",
+    href: "/lab",
+    icon: CircleDot,
+  },
+  {
+    title: "My simulations",
     href: "/history",
-    icon: History,
+    icon: Folder,
   },
   {
     title: "Analytics",
@@ -39,51 +45,31 @@ const sidebarItems = [
   },
 ];
 
+const adminItem = {
+  title: "Admin Panel",
+  href: "/admin",
+  icon: ShieldCheck,
+};
+
 export function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
-  const { user, setUser, clearUser } = useUserStore();
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isLoading, logout } = useAuth();
 
   const isAuthPage = pathname === "/login" || pathname === "/register";
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await authService.getMe() as any;
-        setUser(response.data);
-      } catch (error) {
-        clearUser();
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (!user && !isAuthPage) {
-      fetchUser();
-    } else {
-      setIsLoading(false);
-    }
-  }, [setUser, clearUser, isAuthPage]);
-
-  const handleLogout = async () => {
-    try {
-      await authService.logout();
-      clearUser();
-      router.push("/login");
-    } catch (error) {
-      clearUser();
-      router.push("/login");
-    }
-  };
 
   if (isAuthPage) return null;
 
   return (
     <aside className="w-64 border-r bg-background flex flex-col h-screen sticky top-0">
       <div className="p-6 border-b">
-        <Link href="/" className="text-xl font-bold tracking-tight text-primary">
-          EpidemicSim
+        <Link href="/" className="flex items-center gap-3 group">
+          <Logo className="h-9 w-9 shrink-0 transition-transform duration-300 group-hover:scale-105" />
+          <span className="flex flex-col leading-tight">
+            <span className="text-lg font-bold tracking-tight text-primary">EpidemicSim</span>
+            <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              Outbreak modeling
+            </span>
+          </span>
         </Link>
       </div>
 
@@ -92,15 +78,15 @@ export function Sidebar() {
           const isActive = item.href === "/simulations"
             ? pathname.startsWith("/simulations") || pathname.startsWith("/simulate")
             : pathname === item.href;
-            
+
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
                 "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group",
-                isActive 
-                  ? "bg-primary text-primary-foreground" 
+                isActive
+                  ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
@@ -112,8 +98,31 @@ export function Sidebar() {
             </Link>
           );
         })}
+
+        {user?.is_superuser && (
+          <div className="pt-4 mt-4 border-t border-border">
+            <p className="px-3 mb-2 text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
+              Administration
+            </p>
+            <Link
+              href={adminItem.href}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group",
+                pathname.startsWith("/admin")
+                  ? "bg-purple-600 text-white"
+                  : "text-purple-600 hover:bg-purple-50"
+              )}
+            >
+              <adminItem.icon className={cn(
+                "h-4 w-4 transition-transform duration-200 group-hover:scale-110",
+                pathname.startsWith("/admin") ? "text-white" : "text-purple-600"
+              )} />
+              {adminItem.title}
+            </Link>
+          </div>
+        )}
       </div>
-      
+
       <div className="p-4 border-t bg-muted/30 min-h-[100px] flex flex-col justify-center">
         {isLoading ? (
           <div className="flex items-center gap-3 px-2 animate-pulse">
@@ -134,10 +143,10 @@ export function Sidebar() {
                 <span className="text-[11px] text-muted-foreground truncate">{user.email}</span>
               </div>
             </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleLogout}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={logout}
               className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 font-medium gap-2"
             >
               <LogOut className="h-4 w-4" />

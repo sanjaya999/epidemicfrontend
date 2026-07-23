@@ -34,6 +34,7 @@ export interface Simulation {
   stats: SimulationStats;
   data: SimulationData;
   created_at: string;
+  is_public?: boolean;
 }
 
 export interface SimulationSummary {
@@ -43,6 +44,11 @@ export interface SimulationSummary {
   parameters: SimulationParameters;
   stats: SimulationStats;
   created_at: string;
+  is_public?: boolean;
+}
+
+export interface PublicSimulationEntry {
+  id: number;
 }
 
 export interface RunSimulationRequest {
@@ -55,10 +61,55 @@ export interface RunSimulationRequest {
   beta: number;
   gamma: number;
   sigma?: number | null;
+  is_public?: boolean;
+}
+
+export interface SimulationPreset {
+  key: string;
+  label: string;
+  description: string;
+  model_type: ModelType;
+  population: number;
+  initial_infected: number;
+  initial_exposed: number | null;
+  days: number;
+  beta: number;
+  gamma: number;
+  sigma: number | null;
+  r0: number;
+}
+
+export interface PaginationMeta {
+  total: number;
+  skip: number;
+  limit: number;
+}
+
+export interface SweepPoint {
+  value: number;
+  r0: number;
+  peak_infected: number;
+  peak_day: number;
+  total_infected: number;
+}
+
+export interface SweepResult {
+  parameter: string;
+  points: SweepPoint[];
+}
+
+export interface UserSimulationStats {
+  total: number;
+  by_model: Record<string, number>;
 }
 
 export interface APIResponse<T> {
   success: boolean;
   message: string;
   data?: T;
+  meta?: PaginationMeta;
+}
+
+export interface AIAnalysis {
+  analysis: string;
 }

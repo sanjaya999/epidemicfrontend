@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authService } from "@/services/auth.service";
+import { getErrorMessage, getFieldErrors } from "@/lib/error";
 
 const registerSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -25,10 +26,12 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [serverError, setServerError] = useState("");
 
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -36,12 +39,23 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
+    setServerError("");
     try {
       await authService.register(data);
       toast.success("Account created! Please sign in.");
       router.push("/login");
-    } catch (error) {
-      // Errors handled globally by axios interceptor
+    } catch (err) {
+      // Map backend field-level validation errors to form fields
+      const fieldErrors = getFieldErrors(err);
+      if (fieldErrors) {
+        for (const [field, message] of Object.entries(fieldErrors)) {
+          if (field === "username" || field === "email" || field === "password") {
+            setError(field, { type: "server", message });
+          }
+        }
+      }
+
+      setServerError(getErrorMessage(err, "Registration failed. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -59,6 +73,12 @@ export default function RegisterPage() {
             Join us by entering your details below
           </p>
         </div>
+
+        {serverError && (
+          <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700 text-center">
+            {serverError}
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

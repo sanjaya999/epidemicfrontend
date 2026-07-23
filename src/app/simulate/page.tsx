@@ -13,6 +13,7 @@ import { ArrowLeft, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
+import { getErrorMessage } from "@/lib/error";
 
 const simulationSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -102,6 +103,8 @@ export default function SimulatePage() {
         toast.success("Simulation completed");
         router.push(`/simulations/${response.data.id}`);
       }
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to run simulation. Please try again."));
     } finally {
       setIsLoading(false);
     }
