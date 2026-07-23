@@ -7,13 +7,15 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useUserStore } from "@/store/use-user-store";
 import { authService } from "@/services/auth.service";
-import { 
-  LayoutDashboard, 
+import {
+  LayoutDashboard,
   Folder,
   FlaskConical,
   BarChart3,
+  CircleDot,
   LogOut,
-  User as UserIcon
+  User as UserIcon,
+  ShieldCheck,
 } from "lucide-react";
 
 const sidebarItems = [
@@ -28,6 +30,11 @@ const sidebarItems = [
     icon: FlaskConical,
   },
   {
+    title: "Outbreak Lab",
+    href: "/lab",
+    icon: CircleDot,
+  },
+  {
     title: "My simulations",
     href: "/history",
     icon: Folder,
@@ -38,6 +45,12 @@ const sidebarItems = [
     icon: BarChart3,
   },
 ];
+
+const adminItem = {
+  title: "Admin Panel",
+  href: "/admin",
+  icon: ShieldCheck,
+};
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -112,8 +125,31 @@ export function Sidebar() {
             </Link>
           );
         })}
+
+        {user?.is_superuser && (
+          <div className="pt-4 mt-4 border-t border-border">
+            <p className="px-3 mb-2 text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
+              Administration
+            </p>
+            <Link
+              href={adminItem.href}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group",
+                pathname.startsWith("/admin")
+                  ? "bg-purple-600 text-white"
+                  : "text-purple-600 hover:bg-purple-50"
+              )}
+            >
+              <adminItem.icon className={cn(
+                "h-4 w-4 transition-transform duration-200 group-hover:scale-110",
+                pathname.startsWith("/admin") ? "text-white" : "text-purple-600"
+              )} />
+              {adminItem.title}
+            </Link>
+          </div>
+        )}
       </div>
-      
+
       <div className="p-4 border-t bg-muted/30 min-h-[100px] flex flex-col justify-center">
         {isLoading ? (
           <div className="flex items-center gap-3 px-2 animate-pulse">
