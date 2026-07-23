@@ -16,6 +16,7 @@ import {
 import { adminService } from "@/services/admin.service";
 import type { DashboardStats } from "@/types/admin";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/error";
 
 const statCards = [
   { key: "total_users", label: "Total Users", icon: Users, color: "text-blue-600 bg-blue-50 border-blue-100" },
@@ -43,8 +44,8 @@ export default function AdminDashboardPage() {
       .then((res) => {
         if (res.data) setStats(res.data);
       })
-      .catch(() => {
-        toast.error("Failed to load admin dashboard");
+      .catch((err) => {
+        toast.error(getErrorMessage(err, "Failed to load admin dashboard"));
       })
       .finally(() => setLoading(false));
   }, []);

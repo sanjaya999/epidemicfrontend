@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { adminService } from "@/services/admin.service";
 import type { AdminSimulation } from "@/types/admin";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/error";
 
 const PAGE_SIZE = 15;
 
@@ -37,8 +38,8 @@ export default function AdminSimulationsPage() {
       const res = await adminService.getSimulations(params as any);
       if (res.data) setSimulations(res.data);
       setTotal(res.total);
-    } catch {
-      toast.error("Failed to fetch simulations");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to fetch simulations"));
     } finally {
       setLoading(false);
     }
@@ -58,8 +59,8 @@ export default function AdminSimulationsPage() {
         );
       }
       toast.success(sim.is_public ? "Simulation made private" : "Simulation made public");
-    } catch {
-      toast.error("Failed to update visibility");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to update visibility"));
     }
   }
 
@@ -70,8 +71,8 @@ export default function AdminSimulationsPage() {
       setSimulations((prev) => prev.filter((s) => s.id !== sim.id));
       setTotal((t) => t - 1);
       toast.success("Simulation deleted");
-    } catch {
-      toast.error("Failed to delete simulation");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to delete simulation"));
     }
   }
 

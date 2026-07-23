@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { adminService } from "@/services/admin.service";
 import type { AdminIntervention } from "@/types/admin";
+import { getErrorMessage } from "@/lib/error";
 
 const PAGE_SIZE = 15;
 
@@ -33,8 +34,8 @@ export default function AdminInterventionsPage() {
       const res = await adminService.getInterventions(params as any);
       if (res.data) setInterventions(res.data);
       setTotal(res.total);
-    } catch {
-      toast.error("Failed to fetch interventions");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to fetch interventions"));
     } finally {
       setLoading(false);
     }
@@ -52,8 +53,8 @@ export default function AdminInterventionsPage() {
       setInterventions((prev) => prev.filter((i) => i.id !== iv.id));
       setTotal((t) => t - 1);
       toast.success("Intervention deleted");
-    } catch {
-      toast.error("Failed to delete intervention");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to delete intervention"));
     }
   }
 

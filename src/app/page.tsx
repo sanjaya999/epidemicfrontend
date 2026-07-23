@@ -8,6 +8,7 @@ import { SimulationChart } from "@/components/simulation/SimulationChart";
 import { simulationService } from "@/services/simulation.service";
 import { Simulation } from "@/types/simulation";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/error";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -31,8 +32,8 @@ export default function DashboardPage() {
           })
         );
         setSimulations(sims.filter(Boolean) as Simulation[]);
-      } catch {
-        toast.error("Failed to load public simulations");
+      } catch (err) {
+        toast.error(getErrorMessage(err, "Failed to load public simulations"));
         setSimulations([]);
       } finally {
         setIsLoading(false);

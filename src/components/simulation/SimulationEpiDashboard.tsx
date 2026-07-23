@@ -11,6 +11,7 @@ import { simulationService } from "@/services/simulation.service";
 import { SimulationData, Simulation } from "@/types/simulation";
 import { InterventionSimulation } from "@/services/intervention.service";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/error";
 
 interface SimulationEpiDashboardProps {
   simulation: Simulation;
@@ -63,9 +64,9 @@ export function SimulationEpiDashboard({ simulation, interventions = [] }: Simul
         setError(res.message || "Failed to get AI analysis");
         toast.error(res.message || "Failed to get AI analysis");
       }
-    } catch {
+    } catch (err) {
       setError("Failed to connect to AI service");
-      toast.error("Failed to connect to AI service");
+      toast.error(getErrorMessage(err, "Failed to connect to AI service"));
     } finally {
       setIsAnalyzing(false);
     }

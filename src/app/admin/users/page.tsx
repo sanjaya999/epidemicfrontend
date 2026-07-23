@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { adminService } from "@/services/admin.service";
 import type { AdminUser } from "@/types/admin";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/error";
 
 const PAGE_SIZE = 15;
 
@@ -42,8 +43,8 @@ export default function AdminUsersPage() {
       const res = await adminService.getUsers(params as any);
       if (res.data) setUsers(res.data);
       setTotal(res.total);
-    } catch {
-      toast.error("Failed to fetch users");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to fetch users"));
     } finally {
       setLoading(false);
     }
@@ -61,8 +62,8 @@ export default function AdminUsersPage() {
         setUsers((prev) => prev.map((u) => (u.id === user.id ? res.data![0] : u)));
       }
       toast.success(`User ${user.is_active ? "deactivated" : "activated"}`);
-    } catch {
-      toast.error("Failed to update user status");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to update user status"));
     }
   }
 
@@ -75,8 +76,8 @@ export default function AdminUsersPage() {
       toast.success(
         user.is_superuser ? "Admin role revoked" : "Admin role granted"
       );
-    } catch {
-      toast.error("Failed to update user role");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to update user role"));
     }
   }
 
@@ -87,8 +88,8 @@ export default function AdminUsersPage() {
       setUsers((prev) => prev.filter((u) => u.id !== user.id));
       setTotal((t) => t - 1);
       toast.success("User deleted");
-    } catch {
-      toast.error("Failed to delete user");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to delete user"));
     }
   }
 

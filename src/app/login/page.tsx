@@ -8,13 +8,13 @@ import * as z from "zod";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
-import { AxiosError } from "axios";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authService } from "@/services/auth.service";
 import { useUserStore } from "@/store/use-user-store";
+import { getErrorMessage } from "@/lib/error";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -50,10 +50,7 @@ export default function LoginPage() {
       const redirect = searchParams.get("redirect") || "/";
       router.push(redirect);
     } catch (err) {
-      const axiosErr = err as AxiosError<{ message?: string }>;
-      const message =
-        axiosErr.response?.data?.message || "Login failed. Please try again.";
-      setServerError(message);
+      setServerError(getErrorMessage(err, "Login failed. Please try again."));
     } finally {
       setIsLoading(false);
     }

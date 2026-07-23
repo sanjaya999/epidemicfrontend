@@ -22,6 +22,7 @@ import { simulationService } from "@/services/simulation.service";
 import { useSimulationStore } from "@/store/use-simulation-store";
 import { SimulationSummary, UserSimulationStats } from "@/types/simulation";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/error";
 
 const PAGE_SIZE = 10;
 
@@ -93,8 +94,8 @@ export default function HistoryPage() {
       await simulationService.delete(id);
       removeSimulation(id);
       toast.success("Simulation deleted");
-    } catch {
-      toast.error("Failed to delete simulation");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to delete simulation"));
     }
   }
 
@@ -115,8 +116,8 @@ export default function HistoryPage() {
       });
       toast.success("Simulation duplicated");
       setRefreshKey((key) => key + 1);
-    } catch {
-      toast.error("Failed to duplicate simulation");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to duplicate simulation"));
     }
   }
 
@@ -128,8 +129,8 @@ export default function HistoryPage() {
         updateSimulation(id, { is_public: res.data.is_public });
         toast.success(res.data.is_public ? "Simulation is now public" : "Simulation is now private");
       }
-    } catch {
-      toast.error("Failed to update visibility");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to update visibility"));
     }
   }
 
@@ -146,8 +147,8 @@ export default function HistoryPage() {
       link.remove();
       window.URL.revokeObjectURL(url);
       toast.success("CSV exported");
-    } catch {
-      toast.error("Failed to export CSV");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to export CSV"));
     }
   }
 

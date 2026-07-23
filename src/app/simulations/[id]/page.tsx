@@ -12,6 +12,7 @@ import { simulationService } from "@/services/simulation.service";
 import { interventionService, InterventionSimulation, Preset } from "@/services/intervention.service";
 import { Simulation } from "@/types/simulation";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/error";
 
 export default function SimulationDetailPage() {
   const { id } = useParams();
@@ -51,8 +52,8 @@ export default function SimulationDetailPage() {
       } else {
         toast.error(res.message || "Failed to get AI analysis");
       }
-    } catch {
-      toast.error("Failed to connect to AI service");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to connect to AI service"));
     } finally {
       setIsAnalyzing(false);
     }
@@ -73,8 +74,8 @@ export default function SimulationDetailPage() {
           setInterventions(intRes.data);
         }
         if (presetsRes?.data) setPresets(presetsRes.data);
-      } catch {
-        toast.error("Failed to load simulation");
+      } catch (err) {
+        toast.error(getErrorMessage(err, "Failed to load simulation"));
       } finally {
         setIsLoading(false);
       }
@@ -101,7 +102,7 @@ export default function SimulationDetailPage() {
         setSelectedIntervention(res.data);
       }
     } catch (err) {
-      toast.error("Failed to fetch intervention details");
+      toast.error(getErrorMessage(err, "Failed to fetch intervention details"));
     }
   };
 
@@ -139,7 +140,7 @@ export default function SimulationDetailPage() {
         toast.success("Intervention applied successfully!");
       }
     } catch (err) {
-      toast.error("Failed to run intervention");
+      toast.error(getErrorMessage(err, "Failed to run intervention"));
     } finally {
       setIsRunningIntervention(false);
     }

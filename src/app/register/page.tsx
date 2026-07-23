@@ -8,12 +8,12 @@ import * as z from "zod";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
-import { AxiosError } from "axios";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authService } from "@/services/auth.service";
+import { getErrorMessage, getFieldErrors } from "@/lib/error";
 
 const registerSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -22,11 +22,6 @@ const registerSchema = z.object({
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
-
-interface BackendErrors {
-  message?: string;
-  errors?: Record<string, string>;
-}
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -50,21 +45,17 @@ export default function RegisterPage() {
       toast.success("Account created! Please sign in.");
       router.push("/login");
     } catch (err) {
-      const axiosErr = err as AxiosError<BackendErrors>;
-      const errorData = axiosErr.response?.data;
-
       // Map backend field-level validation errors to form fields
-      if (errorData?.errors) {
-        for (const [field, message] of Object.entries(errorData.errors)) {
+      const fieldErrors = getFieldErrors(err);
+      if (fieldErrors) {
+        for (const [field, message] of Object.entries(fieldErrors)) {
           if (field === "username" || field === "email" || field === "password") {
             setError(field, { type: "server", message });
           }
         }
       }
 
-      setServerError(
-        errorData?.message || "Registration failed. Please try again."
-      );
+      setServerError(getErrorMessage(err, "Registration failed. Please try again."));
     } finally {
       setIsLoading(false);
     }
