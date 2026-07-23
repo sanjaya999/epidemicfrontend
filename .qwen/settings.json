@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "allow all"
+    ]
+  },
+  "$version": 4
+}

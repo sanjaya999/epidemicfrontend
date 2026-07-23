@@ -102,6 +102,8 @@ export default function SimulatePage() {
         toast.success("Simulation completed");
         router.push(`/simulations/${response.data.id}`);
       }
+    } catch {
+      toast.error("Failed to run simulation. Please try again.");
     } finally {
       setIsLoading(false);
     }

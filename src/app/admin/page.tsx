@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
   Users,
   FlaskConical,
@@ -42,7 +43,9 @@ export default function AdminDashboardPage() {
       .then((res) => {
         if (res.data) setStats(res.data);
       })
-      .catch(() => {})
+      .catch(() => {
+        toast.error("Failed to load admin dashboard");
+      })
       .finally(() => setLoading(false));
   }, []);
 

@@ -1,18 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
+import { AxiosError } from "axios";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authService } from "@/services/auth.service";
+import { useUserStore } from "@/store/use-user-store";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -23,7 +25,10 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { setUser } = useUserStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [serverError, setServerError] = useState("");
 
   const {
     register,
@@ -35,12 +40,20 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
+    setServerError("");
     try {
       await authService.login(data);
+      // Fetch and store the user so the UI updates immediately
+      const meResponse = await authService.getMe();
+      setUser(meResponse.data ?? null);
       toast.success("Welcome back!");
-      router.push("/");
-    } catch (error) {
-      // Errors handled globally by axios interceptor
+      const redirect = searchParams.get("redirect") || "/";
+      router.push(redirect);
+    } catch (err) {
+      const axiosErr = err as AxiosError<{ message?: string }>;
+      const message =
+        axiosErr.response?.data?.message || "Login failed. Please try again.";
+      setServerError(message);
     } finally {
       setIsLoading(false);
     }
@@ -58,6 +71,12 @@ export default function LoginPage() {
             Enter your details to access your account
           </p>
         </div>
+
+        {serverError && (
+          <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700 text-center">
+            {serverError}
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -78,15 +97,7 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link
-                  href="/forgot-password"
-                  className="text-xs font-medium text-primary hover:underline underline-offset-4"
-                >
-                  Forgot password?
-                </Link>
-              </div>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"

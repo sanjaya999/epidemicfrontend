@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { simulationService } from "@/services/simulation.service";
 import { useSimulationStore } from "@/store/use-simulation-store";
-import { RunSimulationRequest, ModelType } from "@/types/simulation";
+import { RunSimulationRequest, ModelType, SimulationPreset } from "@/types/simulation";
 
 export function SimulationForm() {
   const router = useRouter();
@@ -26,6 +26,35 @@ export function SimulationForm() {
     gamma: 0.05,
     sigma: null,
   });
+
+  const [presets, setPresets] = useState<SimulationPreset[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    simulationService
+      .getPresets()
+      .then((res) => {
+        if (active && res.data) setPresets(res.data);
+      })
+      .catch(() => setPresets([]));
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  function applyPreset(preset: SimulationPreset) {
+    setForm({
+      name: preset.label,
+      model_type: preset.model_type,
+      population: preset.population,
+      initial_infected: preset.initial_infected,
+      initial_exposed: preset.initial_exposed,
+      days: preset.days,
+      beta: preset.beta,
+      gamma: preset.gamma,
+      sigma: preset.sigma,
+    });
+  }
 
   const r0 = form.gamma > 0 ? (form.beta / form.gamma).toFixed(2) : "—";
   const herdImmunity =
@@ -70,6 +99,26 @@ export function SimulationForm() {
 
   return (
     <div className="space-y-6">
+
+      {/* Quick start presets */}
+      {presets.length > 0 && (
+        <div className="space-y-1.5">
+          <Label>Quick Start</Label>
+          <div className="flex flex-wrap gap-2">
+            {presets.map((preset) => (
+              <button
+                key={preset.key}
+                type="button"
+                onClick={() => applyPreset(preset)}
+                title={`${preset.description} (R₀ ≈ ${preset.r0})`}
+                className="px-3 py-1.5 text-xs border border-border rounded-full text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Name */}
       <div className="space-y-1.5">

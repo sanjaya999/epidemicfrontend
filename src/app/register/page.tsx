@@ -8,6 +8,7 @@ import * as z from "zod";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
+import { AxiosError } from "axios";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,13 +23,20 @@ const registerSchema = z.object({
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
+interface BackendErrors {
+  message?: string;
+  errors?: Record<string, string>;
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [serverError, setServerError] = useState("");
 
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -36,12 +44,27 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
+    setServerError("");
     try {
       await authService.register(data);
       toast.success("Account created! Please sign in.");
       router.push("/login");
-    } catch (error) {
-      // Errors handled globally by axios interceptor
+    } catch (err) {
+      const axiosErr = err as AxiosError<BackendErrors>;
+      const errorData = axiosErr.response?.data;
+
+      // Map backend field-level validation errors to form fields
+      if (errorData?.errors) {
+        for (const [field, message] of Object.entries(errorData.errors)) {
+          if (field === "username" || field === "email" || field === "password") {
+            setError(field, { type: "server", message });
+          }
+        }
+      }
+
+      setServerError(
+        errorData?.message || "Registration failed. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -59,6 +82,12 @@ export default function RegisterPage() {
             Join us by entering your details below
           </p>
         </div>
+
+        {serverError && (
+          <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700 text-center">
+            {serverError}
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

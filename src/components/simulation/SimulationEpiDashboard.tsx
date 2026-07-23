@@ -8,7 +8,7 @@ import {
 import { Sparkles, X, AlertCircle, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { simulationService } from "@/services/simulation.service";
-import { SimulationStats, SimulationParameters, SimulationData, Simulation } from "@/types/simulation";
+import { SimulationData, Simulation } from "@/types/simulation";
 import { InterventionSimulation } from "@/services/intervention.service";
 import { toast } from "sonner";
 
@@ -44,7 +44,7 @@ const INTERVENTION_DOT_COLORS = [
 ];
 
 export function SimulationEpiDashboard({ simulation, interventions = [] }: SimulationEpiDashboardProps) {
-  const { stats, parameters, data, model_type, name, id } = simulation;
+  const { stats, parameters, data, id } = simulation;
 
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -92,7 +92,6 @@ export function SimulationEpiDashboard({ simulation, interventions = [] }: Simul
     const i = Math.round(data.infected[todayIdx]);
     const r = Math.round(data.recovered[todayIdx]);
     const pop = parameters.population;
-    const maxVal = Math.max(s, i, r);
     const items: { label: string; value: number; pct: string }[] = [
       { label: "Susceptible", value: s, pct: ((s / pop) * 100).toFixed(1) },
       { label: "Infected", value: i, pct: ((i / pop) * 100).toFixed(1) },

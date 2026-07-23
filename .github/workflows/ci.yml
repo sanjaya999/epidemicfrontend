@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Type-check, test, build & lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npx next build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+
+      # Lint is informational for now: the in-progress lab/sidebar work has
+      # known lint errors. Remove `continue-on-error` to make this a hard gate
+      # once those are resolved.
+      - name: Lint
+        run: npx eslint .
+        continue-on-error: true

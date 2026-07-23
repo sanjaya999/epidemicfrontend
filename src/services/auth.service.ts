@@ -1,19 +1,26 @@
 import { api } from "@/lib/api";
+import type {
+  ApiEnvelope,
+  LoginPayload,
+  RegisterPayload,
+  TokenResponse,
+  User,
+} from "@/types/auth";
 
 export const authService = {
-  register: async (data: any) => {
-    return api.post("/users/register", data);
+  register: async (data: RegisterPayload) => {
+    return api.post<ApiEnvelope<User>>("/users/register", data);
   },
 
-  login: async (data: any) => {
-    return api.post("/users/login", data);
+  login: async (data: LoginPayload) => {
+    return api.post<TokenResponse>("/users/login", data);
   },
 
   logout: async () => {
-    return api.post("/users/logout");
+    return api.post<ApiEnvelope<null>>("/users/logout");
   },
 
   getMe: async () => {
-    return api.get("/users/me");
+    return api.get<ApiEnvelope<User>>("/users/me");
   },
 };

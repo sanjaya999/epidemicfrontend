@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Activity } from "lucide-react";
+import { toast } from "sonner";
 import { SimulationChart } from "@/components/simulation/SimulationChart";
 import { simulationService } from "@/services/simulation.service";
 import { Simulation } from "@/types/simulation";
+import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -29,8 +31,8 @@ export default function DashboardPage() {
           })
         );
         setSimulations(sims.filter(Boolean) as Simulation[]);
-      } catch (err) {
-        console.error("Failed to fetch public simulations:", err);
+      } catch {
+        toast.error("Failed to load public simulations");
         setSimulations([]);
       } finally {
         setIsLoading(false);
@@ -115,8 +117,4 @@ export default function DashboardPage() {
       )}
     </div>
   );
-}
-
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(" ");
 }

@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useUserStore } from "@/store/use-user-store";
-import { authService } from "@/services/auth.service";
+import { useAuth } from "@/components/auth-provider";
 import {
   LayoutDashboard,
   Folder,
@@ -54,41 +52,9 @@ const adminItem = {
 
 export function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
-  const { user, setUser, clearUser } = useUserStore();
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isLoading, logout } = useAuth();
 
   const isAuthPage = pathname === "/login" || pathname === "/register";
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await authService.getMe() as any;
-        setUser(response.data);
-      } catch (error) {
-        clearUser();
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (!user && !isAuthPage) {
-      fetchUser();
-    } else {
-      setIsLoading(false);
-    }
-  }, [setUser, clearUser, isAuthPage]);
-
-  const handleLogout = async () => {
-    try {
-      await authService.logout();
-      clearUser();
-      router.push("/login");
-    } catch (error) {
-      clearUser();
-      router.push("/login");
-    }
-  };
 
   if (isAuthPage) return null;
 
@@ -105,15 +71,15 @@ export function Sidebar() {
           const isActive = item.href === "/simulations"
             ? pathname.startsWith("/simulations") || pathname.startsWith("/simulate")
             : pathname === item.href;
-            
+
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
                 "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group",
-                isActive 
-                  ? "bg-primary text-primary-foreground" 
+                isActive
+                  ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
@@ -170,10 +136,10 @@ export function Sidebar() {
                 <span className="text-[11px] text-muted-foreground truncate">{user.email}</span>
               </div>
             </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleLogout}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={logout}
               className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 font-medium gap-2"
             >
               <LogOut className="h-4 w-4" />

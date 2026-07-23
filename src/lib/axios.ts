@@ -1,9 +1,6 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from "axios";
-import { toast } from "sonner";
-import Cookies from "js-cookie";
 
 const baseURL = process.env.NEXT_PUBLIC_API_URL;
-
 
 interface ApiErrorResponse {
   success: false;
@@ -11,6 +8,22 @@ interface ApiErrorResponse {
   errors?: Record<string, string>;
 }
 
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: unknown) => void;
+  reject: (reason?: unknown) => void;
+}> = [];
+
+function processQueue(error: AxiosError | null) {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error);
+    } else {
+      resolve();
+    }
+  });
+  failedQueue = [];
+}
 
 const axiosInstance: AxiosInstance = axios.create({
   baseURL,
@@ -20,35 +33,49 @@ const axiosInstance: AxiosInstance = axios.create({
   },
 });
 
-// Request Interceptor
 axiosInstance.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    return config;
-  },
-  (error: AxiosError) => {
-    return Promise.reject(error);
-  }
+  (config: InternalAxiosRequestConfig) => config,
+  (error: AxiosError) => Promise.reject(error)
 );
 
-// Response Interceptor: Handle errors globally
 axiosInstance.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<ApiErrorResponse>) => {
-    const errorData = error.response?.data;
-    const message = errorData?.message || "An unexpected error occurred";
+  async (error: AxiosError<ApiErrorResponse>) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
 
-    if (error.response?.status === 401) {
-      // Clear cookie using js-cookie
-      Cookies.remove("access_token");
-      // Optional: window.location.href = "/login";
-    }
+    const status = error.response?.status;
+    const url = originalRequest?.url ?? "";
 
-    // Show toast message for all errors except 401 on /users/me (expected for guest users)
-    const isMeEndpoint = error.config?.url?.includes("/users/me");
-    const isUnauthorized = error.response?.status === 401;
+    // Never retry refresh or login requests
+    const isAuthEndpoint =
+      url.includes("/users/refresh") || url.includes("/users/login");
 
-    if (!(isMeEndpoint && isUnauthorized)) {
-      toast.error(message);
+    // On 401, attempt a token refresh (once per request)
+    if (status === 401 && !originalRequest._retry && !isAuthEndpoint) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(() => axiosInstance(originalRequest));
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        await axiosInstance.post("/users/refresh");
+        processQueue(null);
+        return axiosInstance(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError as AxiosError);
+        if (typeof window !== "undefined") {
+          window.location.href = "/login";
+        }
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
     }
 
     return Promise.reject(error);
