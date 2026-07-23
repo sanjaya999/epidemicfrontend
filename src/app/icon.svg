@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0e1729"/>
+      <stop offset="1" stop-color="#1a2540"/>
+    </linearGradient>
+    <linearGradient id="curve" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3b82f6"/>
+      <stop offset="0.32" stop-color="#ef4444"/>
+      <stop offset="0.6" stop-color="#f59e0b"/>
+      <stop offset="1" stop-color="#22c55e"/>
+    </linearGradient>
+    <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ef4444" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#ef4444" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fbbf24" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#fbbf24" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#ffffff" stroke-opacity="0.07"/>
+
+  <g stroke="#ffffff" stroke-opacity="0.055" stroke-width="1">
+    <line x1="8" y1="20" x2="56" y2="20"/>
+    <line x1="8" y1="32" x2="56" y2="32"/>
+    <line x1="8" y1="44" x2="56" y2="44"/>
+  </g>
+
+  <path d="M 8 48 C 16 48, 20 15, 27 15 C 34 15, 38 44, 56 46 L 56 51 L 8 51 Z" fill="url(#area)"/>
+
+  <path d="M 8 48 C 16 48, 20 15, 27 15 C 34 15, 38 44, 56 46"
+        fill="none" stroke="url(#curve)" stroke-width="3.5" stroke-linecap="round"/>
+
+  <circle cx="13.5" cy="40" r="2" fill="#3b82f6"/>
+  <circle cx="18" cy="31" r="1.9" fill="#ef4444"/>
+  <circle cx="22.5" cy="22" r="1.7" fill="#f59e0b"/>
+
+  <circle cx="27" cy="15" r="8.5" fill="url(#glow)"/>
+  <circle cx="27" cy="15" r="3.6" fill="#fde68a"/>
+</svg>

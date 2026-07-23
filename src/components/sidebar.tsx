@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth-provider";
+import { Logo } from "@/components/logo";
 import {
   LayoutDashboard,
   Folder,
@@ -61,8 +62,14 @@ export function Sidebar() {
   return (
     <aside className="w-64 border-r bg-background flex flex-col h-screen sticky top-0">
       <div className="p-6 border-b">
-        <Link href="/" className="text-xl font-bold tracking-tight text-primary">
-          EpidemicSim
+        <Link href="/" className="flex items-center gap-3 group">
+          <Logo className="h-9 w-9 shrink-0 transition-transform duration-300 group-hover:scale-105" />
+          <span className="flex flex-col leading-tight">
+            <span className="text-lg font-bold tracking-tight text-primary">EpidemicSim</span>
+            <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              Outbreak modeling
+            </span>
+          </span>
         </Link>
       </div>
 
