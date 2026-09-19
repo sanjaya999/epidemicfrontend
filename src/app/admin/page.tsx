@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { toast } from "sonner";
 import {
   Activity,
-  ArrowUpRight,
   FlaskConical,
   Globe,
   ShieldCheck,
@@ -27,24 +25,6 @@ const statItems = [
   { key: "public_simulations", label: "Public simulations", icon: Globe },
   { key: "total_interventions", label: "Interventions", icon: Activity },
 ] as const;
-
-const managementLinks = [
-  {
-    title: "Users and access",
-    description: "Manage account status and assign operational roles.",
-    href: "/admin/users",
-  },
-  {
-    title: "Simulation library",
-    description: "Review ownership, visibility, and saved model runs.",
-    href: "/admin/simulations",
-  },
-  {
-    title: "Intervention records",
-    description: "Review and remove saved intervention scenarios.",
-    href: "/admin/interventions",
-  },
-];
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -126,34 +106,7 @@ export default function AdminDashboardPage() {
         </div>
       </section>
 
-      <div className="mt-7 grid gap-7 lg:grid-cols-[1.2fr_0.8fr]">
-        <section className="rounded-xl border bg-card" aria-labelledby="management-title">
-          <div className="border-b px-5 py-4">
-            <h2 id="management-title" className="font-semibold">Management</h2>
-            <p className="mt-1 text-xs text-muted-foreground">Open a system workspace</p>
-          </div>
-          <div className="divide-y">
-            {managementLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="group flex items-center justify-between gap-4 px-5 py-5 outline-none transition-colors hover:bg-muted/60 focus-visible:bg-muted"
-              >
-                <span>
-                  <span className="block text-sm font-medium">{link.title}</span>
-                  <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-                    {link.description}
-                  </span>
-                </span>
-                <ArrowUpRight
-                  className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-foreground"
-                  aria-hidden="true"
-                />
-              </Link>
-            ))}
-          </div>
-        </section>
-
+      <div className="mt-7">
         <section className="rounded-xl border bg-card" aria-labelledby="roles-title">
           <div className="border-b px-5 py-4">
             <h2 id="roles-title" className="font-semibold">Access distribution</h2>

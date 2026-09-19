@@ -17,6 +17,11 @@ import {
   UserPlus,
   User as UserIcon,
   ShieldCheck,
+  Activity,
+  Building2,
+  MapPin,
+  Microscope,
+  Users,
 } from "lucide-react";
 
 const sidebarItems = [
@@ -42,11 +47,15 @@ const sidebarItems = [
   },
 ];
 
-const adminItem = {
-  title: "Admin Panel",
-  href: "/admin",
-  icon: ShieldCheck,
-};
+const adminItems = [
+  { title: "Admin overview", href: "/admin", icon: ShieldCheck },
+  { title: "Users", href: "/admin/users", icon: Users },
+  { title: "Simulations", href: "/admin/simulations", icon: FlaskConical },
+  { title: "Interventions", href: "/admin/interventions", icon: Activity },
+  { title: "Organizations", href: "/admin/organizations", icon: Building2 },
+  { title: "Locations", href: "/admin/locations", icon: MapPin },
+  { title: "Disease profiles", href: "/admin/diseases", icon: Microscope },
+];
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -104,25 +113,38 @@ export function Sidebar() {
             <p className="hidden md:block px-3 mb-2 text-[10px] tracking-wide text-muted-foreground font-semibold">
               Administration
             </p>
-            <Link
-              href={adminItem.href}
-              aria-label={adminItem.title}
-              title={adminItem.title}
-              className={cn(
-                "flex items-center justify-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group md:justify-start",
-                pathname.startsWith("/admin")
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
-            >
-              <adminItem.icon className={cn(
-                "h-4 w-4 transition-transform duration-200 group-hover:scale-110",
-                pathname.startsWith("/admin")
-                  ? "text-primary-foreground"
-                  : "text-muted-foreground group-hover:text-foreground"
-              )} />
-              <span className="hidden md:inline">{adminItem.title}</span>
-            </Link>
+            <div className="space-y-1">
+              {adminItems.map((item) => {
+                const isActive = item.href === "/admin"
+                  ? pathname === "/admin"
+                  : pathname.startsWith(item.href);
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    aria-label={item.title}
+                    title={item.title}
+                    className={cn(
+                      "group flex items-center justify-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 md:justify-start",
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    <item.icon
+                      className={cn(
+                        "h-4 w-4 transition-transform duration-200 group-hover:scale-110",
+                        isActive
+                          ? "text-primary-foreground"
+                          : "text-muted-foreground group-hover:text-foreground"
+                      )}
+                    />
+                    <span className="hidden md:inline">{item.title}</span>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
