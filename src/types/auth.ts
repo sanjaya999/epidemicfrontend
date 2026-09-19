@@ -1,9 +1,12 @@
+export type UserRole = "citizen" | "reporter" | "health_officer" | "admin";
+
 export interface User {
   id: number;
   username: string;
   email: string;
   is_active: boolean;
   is_superuser: boolean;
+  role: UserRole;
   created_at: string;
   updated_at: string;
 }

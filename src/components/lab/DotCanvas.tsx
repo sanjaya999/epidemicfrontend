@@ -74,12 +74,19 @@ export function DotCanvas({ engine, stats }: DotCanvasProps) {
   // Reset playback when a new engine (new simulation / dot count) arrives, and
   // fit it to the canvas size measured so far.
   useEffect(() => {
+    let active = true;
     engineRef.current = engine;
     engine.resize(sizeRef.current.w, sizeRef.current.h);
     simTimeRef.current = 0;
-    setCurrentDay(0);
-    setPlaying(false);
-    setEnded(false);
+    queueMicrotask(() => {
+      if (!active) return;
+      setCurrentDay(0);
+      setPlaying(false);
+      setEnded(false);
+    });
+    return () => {
+      active = false;
+    };
   }, [engine]);
 
   const draw = useCallback((ctx: CanvasRenderingContext2D, cssW: number, cssH: number) => {

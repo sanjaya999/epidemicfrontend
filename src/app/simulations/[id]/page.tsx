@@ -13,6 +13,7 @@ import { interventionService, InterventionSimulation, Preset } from "@/services/
 import { Simulation } from "@/types/simulation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/error";
+import { cn } from "@/lib/utils";
 
 export default function SimulationDetailPage() {
   const { id } = useParams();
@@ -463,9 +464,4 @@ export default function SimulationDetailPage() {
     </div>
 
   );
-}
-
-// Helper for cn
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(" ");
 }

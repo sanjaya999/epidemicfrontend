@@ -1,14 +1,5 @@
 import { create } from "zustand";
-
-interface User {
-  username: string;
-  email: string;
-  id: number;
-  is_active: boolean;
-  is_superuser: boolean;
-  created_at: string;
-  updated_at: string;
-}
+import type { User } from "@/types/auth";
 
 interface UserStore {
   user: User | null;

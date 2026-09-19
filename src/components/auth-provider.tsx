@@ -31,9 +31,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, setUser, clearUser } = useUserStore();
-  const [isLoading, setIsLoading] = useState(true);
+  const [checkedPath, setCheckedPath] = useState<string | null>(null);
 
   const isAuthPage = pathname === "/login" || pathname === "/register";
+  const shouldCheckSession = !user && !isAuthPage && checkedPath !== pathname;
+  const isLoading = shouldCheckSession;
 
   useEffect(() => {
     let cancelled = false;
@@ -50,21 +52,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } finally {
         if (!cancelled) {
-          setIsLoading(false);
+          setCheckedPath(pathname);
         }
       }
     }
 
-    if (!user && !isAuthPage) {
+    if (shouldCheckSession) {
       fetchUser();
-    } else {
-      setIsLoading(false);
     }
 
     return () => {
       cancelled = true;
     };
-  }, [user, isAuthPage, setUser, clearUser]);
+  }, [pathname, shouldCheckSession, setUser, clearUser]);
 
   const logout = useCallback(async () => {
     try {

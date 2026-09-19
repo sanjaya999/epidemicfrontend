@@ -6,18 +6,35 @@ import type {
   AdminSimulation,
   AdminUser,
 } from "@/types/admin";
+import type { UserRole } from "@/types/auth";
+
+export interface AdminUserFilters {
+  skip?: number;
+  limit?: number;
+  search?: string;
+  is_active?: boolean;
+  role?: UserRole;
+}
+
+export interface AdminSimulationFilters {
+  skip?: number;
+  limit?: number;
+  search?: string;
+  model_type?: string;
+}
+
+export interface AdminInterventionFilters {
+  skip?: number;
+  limit?: number;
+  search?: string;
+}
 
 export const adminService = {
   getDashboard: async () => {
     return api.get<AdminDashboardResponse>("/admin/dashboard");
   },
 
-  getUsers: async (params?: {
-    skip?: number;
-    limit?: number;
-    search?: string;
-    is_active?: boolean;
-  }) => {
+  getUsers: async (params?: AdminUserFilters) => {
     return api.get<AdminListResponse<AdminUser>>("/admin/users", { params });
   },
 
@@ -27,9 +44,9 @@ export const adminService = {
     });
   },
 
-  toggleUserRole: async (userId: number, is_superuser: boolean) => {
+  updateUserRole: async (userId: number, role: UserRole) => {
     return api.patch<AdminListResponse<AdminUser>>(`/admin/users/${userId}/role`, {
-      is_superuser,
+      role,
     });
   },
 
@@ -37,12 +54,7 @@ export const adminService = {
     return api.delete<void>(`/admin/users/${userId}`);
   },
 
-  getSimulations: async (params?: {
-    skip?: number;
-    limit?: number;
-    search?: string;
-    model_type?: string;
-  }) => {
+  getSimulations: async (params?: AdminSimulationFilters) => {
     return api.get<AdminListResponse<AdminSimulation>>("/admin/simulations", { params });
   },
 
@@ -57,11 +69,7 @@ export const adminService = {
     return api.delete<void>(`/admin/simulations/${simulationId}`);
   },
 
-  getInterventions: async (params?: {
-    skip?: number;
-    limit?: number;
-    search?: string;
-  }) => {
+  getInterventions: async (params?: AdminInterventionFilters) => {
     return api.get<AdminListResponse<AdminIntervention>>("/admin/interventions", { params });
   },
 

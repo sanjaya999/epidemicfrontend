@@ -1,3 +1,5 @@
+import type { UserRole } from "@/types/auth";
+
 export interface DashboardStats {
   total_users: number;
   active_users: number;
@@ -6,6 +8,7 @@ export interface DashboardStats {
   total_simulations: number;
   public_simulations: number;
   total_interventions: number;
+  users_by_role: Record<UserRole, number>;
 }
 
 export interface AdminUser {
@@ -14,6 +17,7 @@ export interface AdminUser {
   email: string;
   is_active: boolean;
   is_superuser: boolean;
+  role: UserRole;
   created_at: string;
   updated_at: string;
   simulation_count: number;

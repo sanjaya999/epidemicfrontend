@@ -18,39 +18,37 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchPublicSimulations() {
       try {
-        const res = await simulationService.getPublic();
-        const ids = (res.data ?? []).map(entry => entry.id);
-
-        const sims = await Promise.all(
-          ids.map(async (id) => {
+        const response = await simulationService.getPublic();
+        const simulationsWithData = await Promise.all(
+          (response.data ?? []).map(async ({ id }) => {
             try {
-              const simRes = await simulationService.getById(id);
-              return simRes.data ?? null;
+              return (await simulationService.getById(id)).data ?? null;
             } catch {
               return null;
             }
           })
         );
-        setSimulations(sims.filter(Boolean) as Simulation[]);
-      } catch (err) {
-        toast.error(getErrorMessage(err, "Failed to load public simulations"));
+        setSimulations(simulationsWithData.filter(Boolean) as Simulation[]);
+      } catch (error) {
+        toast.error(getErrorMessage(error, "Failed to load public simulations"));
         setSimulations([]);
       } finally {
         setIsLoading(false);
       }
     }
+
     fetchPublicSimulations();
   }, []);
 
   if (isLoading) {
     return (
-      <div className="p-8 w-full space-y-4">
-        <div className="h-10 w-48 bg-muted animate-pulse rounded-sm" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[...Array(4)].map((_, i) => (
+      <div className="w-full space-y-4 p-8">
+        <div className="h-10 w-48 animate-pulse rounded-sm bg-muted" />
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          {[...Array(4)].map((_, index) => (
             <div
-              key={i}
-              className="h-[340px] rounded-2xl bg-card border border-border animate-pulse"
+              key={index}
+              className="h-[340px] animate-pulse rounded-2xl border border-border bg-card"
             />
           ))}
         </div>
@@ -59,60 +57,63 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-8 w-full">
-      <div className="flex items-center justify-between pb-6 mb-6 border-b border-border">
+    <div className="w-full p-8">
+      <div className="mb-6 flex items-center justify-between border-b border-border pb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+          <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
             <Activity className="h-6 w-6 text-muted-foreground" />
             Dashboard
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="mt-1 text-sm text-muted-foreground">
             Public epidemic simulations from the community
           </p>
         </div>
       </div>
 
       {!simulations.length ? (
-        <div className="flex flex-col items-center justify-center py-24 text-center border border-dashed rounded-lg bg-muted/30">
-          <Activity className="h-12 w-12 text-muted-foreground/20 mb-4" />
-          <p className="text-muted-foreground text-sm">No public simulations available</p>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed bg-muted/30 py-24 text-center">
+          <Activity className="mb-4 h-12 w-12 text-muted-foreground/20" />
+          <p className="text-sm text-muted-foreground">No public simulations available</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {simulations.map((sim) => (
-            <div
-              key={sim.id}
-              onClick={() => router.push(`/simulations/${sim.id}`)}
-              className="group p-6 border border-border rounded-2xl bg-card hover:border-primary/50 hover:shadow-sm transition-all cursor-pointer space-y-4"
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          {simulations.map((simulation) => (
+            <button
+              key={simulation.id}
+              type="button"
+              onClick={() => router.push(`/simulations/${simulation.id}`)}
+              className="group space-y-4 rounded-2xl border border-border bg-card p-6 text-left transition-all hover:border-primary/50 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <div className="flex items-center gap-3">
-                <div className={cn(
-                  "px-2.5 py-0.5 rounded-md border text-[11px] font-bold tracking-wider",
-                  sim.model_type === "SIR"
-                    ? "text-blue-500 bg-blue-500/5 border-blue-500/20"
-                    : "text-orange-500 bg-orange-500/5 border-orange-500/20"
-                )}>
-                  {sim.model_type}
-                </div>
-                <h3 className="text-base font-semibold group-hover:text-primary transition-colors truncate">
-                  {sim.name}
-                </h3>
+                <span
+                  className={cn(
+                    "rounded-md border px-2.5 py-0.5 text-[11px] font-bold tracking-wider",
+                    simulation.model_type === "SIR"
+                      ? "border-blue-500/20 bg-blue-500/5 text-blue-500"
+                      : "border-orange-500/20 bg-orange-500/5 text-orange-500"
+                  )}
+                >
+                  {simulation.model_type}
+                </span>
+                <h2 className="truncate text-base font-semibold transition-colors group-hover:text-primary">
+                  {simulation.name}
+                </h2>
               </div>
 
               <SimulationChart
-                data={sim.data}
-                modelType={sim.model_type}
+                data={simulation.data}
+                modelType={simulation.model_type}
                 height={200}
               />
 
-              <div className="flex items-center gap-4 text-xs text-muted-foreground pt-3 border-t border-border">
-                <span>R₀ {sim.stats.r0.toFixed(2)}</span>
-                <span className="w-1 h-1 rounded-full bg-border" />
-                <span>Peak day {sim.stats.peak_day}</span>
-                <span className="w-1 h-1 rounded-full bg-border" />
-                <span>{sim.stats.total_infected.toLocaleString()} infected</span>
+              <div className="flex items-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
+                <span>R₀ {simulation.stats.r0.toFixed(2)}</span>
+                <span className="h-1 w-1 rounded-full bg-border" />
+                <span>Peak day {simulation.stats.peak_day}</span>
+                <span className="h-1 w-1 rounded-full bg-border" />
+                <span>{simulation.stats.total_infected.toLocaleString()} infected</span>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       )}

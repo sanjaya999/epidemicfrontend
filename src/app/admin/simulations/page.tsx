@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { adminService } from "@/services/admin.service";
+import type { AdminSimulationFilters } from "@/services/admin.service";
 import type { AdminSimulation } from "@/types/admin";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/error";
@@ -28,14 +29,14 @@ export default function AdminSimulationsPage() {
 
   const fetchSimulations = useCallback(async () => {
     try {
-      const params: Record<string, unknown> = {
+      const params: AdminSimulationFilters = {
         skip: page * PAGE_SIZE,
         limit: PAGE_SIZE,
       };
       if (search) params.search = search;
       if (modelType) params.model_type = modelType;
 
-      const res = await adminService.getSimulations(params as any);
+      const res = await adminService.getSimulations(params);
       if (res.data) setSimulations(res.data);
       setTotal(res.total);
     } catch (err) {

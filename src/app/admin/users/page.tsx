@@ -6,7 +6,6 @@ import {
   Users,
   Search,
   ShieldCheck,
-  ShieldOff,
   UserCheck,
   UserX,
   Trash2,
@@ -16,7 +15,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { adminService } from "@/services/admin.service";
+import type { AdminUserFilters } from "@/services/admin.service";
 import type { AdminUser } from "@/types/admin";
+import type { UserRole } from "@/types/auth";
+import { ROLE_LABELS, USER_ROLES } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/error";
 
@@ -28,19 +30,21 @@ export default function AdminUsersPage() {
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"" | "active" | "inactive">("");
+  const [roleFilter, setRoleFilter] = useState<"" | UserRole>("");
   const [loading, setLoading] = useState(true);
 
   const fetchUsers = useCallback(async () => {
     try {
-      const params: Record<string, unknown> = {
+      const params: AdminUserFilters = {
         skip: page * PAGE_SIZE,
         limit: PAGE_SIZE,
       };
       if (search) params.search = search;
       if (statusFilter === "active") params.is_active = true;
       if (statusFilter === "inactive") params.is_active = false;
+      if (roleFilter) params.role = roleFilter;
 
-      const res = await adminService.getUsers(params as any);
+      const res = await adminService.getUsers(params);
       if (res.data) setUsers(res.data);
       setTotal(res.total);
     } catch (err) {
@@ -48,7 +52,7 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, statusFilter]);
+  }, [page, roleFilter, search, statusFilter]);
 
   useEffect(() => {
     const timer = setTimeout(fetchUsers, search ? 250 : 0);
@@ -67,15 +71,13 @@ export default function AdminUsersPage() {
     }
   }
 
-  async function handleToggleRole(user: AdminUser) {
+  async function handleRoleChange(user: AdminUser, role: UserRole) {
     try {
-      const res = await adminService.toggleUserRole(user.id, !user.is_superuser);
+      const res = await adminService.updateUserRole(user.id, role);
       if (res.data?.[0]) {
         setUsers((prev) => prev.map((u) => (u.id === user.id ? res.data![0] : u)));
       }
-      toast.success(
-        user.is_superuser ? "Admin role revoked" : "Admin role granted"
-      );
+      toast.success(`Role changed to ${ROLE_LABELS[role]}`);
     } catch (err) {
       toast.error(getErrorMessage(err, "Failed to update user role"));
     }
@@ -124,6 +126,20 @@ export default function AdminUsersPage() {
             className="pl-9"
           />
         </div>
+        <select
+          value={roleFilter}
+          onChange={(event) => {
+            setRoleFilter(event.target.value as "" | UserRole);
+            setPage(0);
+          }}
+          className="h-9 rounded-md border border-input bg-background px-3 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label="Filter users by role"
+        >
+          <option value="">All roles</option>
+          {USER_ROLES.map((role) => (
+            <option key={role} value={role}>{ROLE_LABELS[role]}</option>
+          ))}
+        </select>
         <div className="flex items-center gap-1 border border-border rounded-md p-1 self-start sm:self-auto">
           {(["", "active", "inactive"] as const).map((s) => (
             <button
@@ -202,13 +218,15 @@ export default function AdminUsersPage() {
                     <span
                       className={cn(
                         "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium",
-                        user.is_superuser
+                        user.role === "admin"
                           ? "bg-purple-50 text-purple-700 border border-purple-200"
-                          : "bg-gray-50 text-gray-600 border border-gray-200"
+                          : user.role === "health_officer"
+                            ? "bg-teal-50 text-teal-700 border border-teal-200"
+                            : "bg-gray-50 text-gray-700 border border-gray-200"
                       )}
                     >
-                      {user.is_superuser ? <ShieldCheck size={11} /> : <ShieldOff size={11} />}
-                      {user.is_superuser ? "Admin" : "User"}
+                      {user.role === "admin" && <ShieldCheck size={11} />}
+                      {ROLE_LABELS[user.role]}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center hidden lg:table-cell">
@@ -227,7 +245,7 @@ export default function AdminUsersPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleToggleStatus(user)}
-                        disabled={user.is_superuser}
+                        disabled={user.role === "admin"}
                         className={cn(
                           "h-8 px-2 text-xs",
                           user.is_active
@@ -238,20 +256,21 @@ export default function AdminUsersPage() {
                       >
                         {user.is_active ? "Deactivate" : "Activate"}
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleToggleRole(user)}
-                        className="h-8 px-2 text-xs text-purple-500 hover:text-purple-600 hover:bg-purple-50"
-                        title={user.is_superuser ? "Revoke admin" : "Grant admin"}
+                      <select
+                        value={user.role}
+                        onChange={(event) => handleRoleChange(user, event.target.value as UserRole)}
+                        className="h-8 max-w-32 rounded-md border bg-background px-2 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        aria-label={`Change role for ${user.username}`}
                       >
-                        {user.is_superuser ? "Revoke" : "Promote"}
-                      </Button>
+                        {USER_ROLES.map((role) => (
+                          <option key={role} value={role}>{ROLE_LABELS[role]}</option>
+                        ))}
+                      </select>
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => handleDelete(user)}
-                        disabled={user.is_superuser}
+                        disabled={user.role === "admin"}
                         className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                       >
                         <Trash2 size={14} />

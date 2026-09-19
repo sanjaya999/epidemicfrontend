@@ -87,9 +87,11 @@ export function LabShell() {
   useEffect(() => {
     if (selectedSimId === null) return;
     let cancelled = false;
-    setLoadingDetail(true);
-    setActiveInt(null);
     (async () => {
+      await Promise.resolve();
+      if (cancelled) return;
+      setLoadingDetail(true);
+      setActiveInt(null);
       try {
         const [simRes, intRes] = await Promise.all([
           simulationService.getById(selectedSimId),

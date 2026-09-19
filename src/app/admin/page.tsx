@@ -4,34 +4,46 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
-  Users,
-  FlaskConical,
   Activity,
+  ArrowUpRight,
+  FlaskConical,
+  Globe,
   ShieldCheck,
   UserCheck,
+  Users,
   UserX,
-  Globe,
-  ArrowRight,
 } from "lucide-react";
 import { adminService } from "@/services/admin.service";
 import type { DashboardStats } from "@/types/admin";
-import { cn } from "@/lib/utils";
+import { ROLE_LABELS, USER_ROLES } from "@/lib/roles";
 import { getErrorMessage } from "@/lib/error";
 
-const statCards = [
-  { key: "total_users", label: "Total Users", icon: Users, color: "text-blue-600 bg-blue-50 border-blue-100" },
-  { key: "active_users", label: "Active Users", icon: UserCheck, color: "text-green-600 bg-green-50 border-green-100" },
-  { key: "inactive_users", label: "Inactive Users", icon: UserX, color: "text-red-600 bg-red-50 border-red-100" },
-  { key: "superusers", label: "Superadmins", icon: ShieldCheck, color: "text-purple-600 bg-purple-50 border-purple-100" },
-  { key: "total_simulations", label: "Simulations", icon: FlaskConical, color: "text-orange-600 bg-orange-50 border-orange-100" },
-  { key: "public_simulations", label: "Public Sims", icon: Globe, color: "text-teal-600 bg-teal-50 border-teal-100" },
-  { key: "total_interventions", label: "Interventions", icon: Activity, color: "text-pink-600 bg-pink-50 border-pink-100" },
+const statItems = [
+  { key: "total_users", label: "Total users", icon: Users },
+  { key: "active_users", label: "Active users", icon: UserCheck },
+  { key: "inactive_users", label: "Inactive users", icon: UserX },
+  { key: "superusers", label: "Administrators", icon: ShieldCheck },
+  { key: "total_simulations", label: "Simulations", icon: FlaskConical },
+  { key: "public_simulations", label: "Public simulations", icon: Globe },
+  { key: "total_interventions", label: "Interventions", icon: Activity },
 ] as const;
 
-const quickLinks = [
-  { title: "Manage Users", description: "Activate, deactivate, promote or delete users", href: "/admin/users" },
-  { title: "Manage Simulations", description: "View, toggle visibility or delete any simulation", href: "/admin/simulations" },
-  { title: "Manage Interventions", description: "View or delete any intervention", href: "/admin/interventions" },
+const managementLinks = [
+  {
+    title: "Users and access",
+    description: "Manage account status and assign operational roles.",
+    href: "/admin/users",
+  },
+  {
+    title: "Simulation library",
+    description: "Review ownership, visibility, and saved model runs.",
+    href: "/admin/simulations",
+  },
+  {
+    title: "Intervention records",
+    description: "Review and remove saved intervention scenarios.",
+    href: "/admin/interventions",
+  },
 ];
 
 export default function AdminDashboardPage() {
@@ -41,80 +53,123 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     adminService
       .getDashboard()
-      .then((res) => {
-        if (res.data) setStats(res.data);
+      .then((response) => {
+        if (response.data) setStats(response.data);
       })
-      .catch((err) => {
-        toast.error(getErrorMessage(err, "Failed to load admin dashboard"));
+      .catch((error) => {
+        toast.error(getErrorMessage(error, "Failed to load administration overview"));
       })
       .finally(() => setLoading(false));
   }, []);
 
   if (loading) {
     return (
-      <div className="p-8 w-full space-y-6">
-        <div className="h-10 w-56 bg-muted animate-pulse rounded-sm" />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[...Array(7)].map((_, i) => (
-            <div key={i} className="h-28 rounded-lg bg-card border border-border animate-pulse" />
-          ))}
+      <div className="w-full space-y-7 p-5 sm:p-8">
+        <div className="h-16 max-w-md animate-pulse rounded-md bg-muted" />
+        <div className="h-72 animate-pulse rounded-xl border bg-card" />
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="h-64 animate-pulse rounded-xl border bg-card" />
+          <div className="h-64 animate-pulse rounded-xl border bg-card" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-8 w-full">
-      <div className="pb-6 mb-6 border-b border-border">
-        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-          <ShieldCheck className="h-6 w-6 text-purple-500" />
-          Admin Dashboard
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          System-wide overview and management
-        </p>
-      </div>
+    <div className="w-full p-5 sm:p-8">
+      <header className="mb-7 flex flex-col justify-between gap-4 border-b pb-6 sm:flex-row sm:items-end">
+        <div>
+          <div className="mb-3 flex items-center gap-2 text-sm text-muted-foreground">
+            <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+            Restricted administration
+          </div>
+          <h1 className="text-3xl font-semibold tracking-tight">System overview</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Accounts, model activity, and platform access in one place.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <span className="h-2 w-2 rounded-full bg-foreground" />
+          System available
+        </div>
+      </header>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {statCards.map((card) => (
-          <div
-            key={card.key}
-            className="p-5 rounded-lg border bg-card flex flex-col gap-3"
-          >
-            <div className={cn("h-9 w-9 rounded-md flex items-center justify-center border", card.color)}>
-              <card.icon className="h-4 w-4" />
+      <section className="overflow-hidden rounded-xl border bg-border" aria-labelledby="snapshot-title">
+        <div className="flex items-center justify-between bg-card px-5 py-4">
+          <div>
+            <h2 id="snapshot-title" className="font-semibold">System snapshot</h2>
+            <p className="mt-1 text-xs text-muted-foreground">Current records across EpiWatch</p>
+          </div>
+          <span className="text-xs text-muted-foreground">Live totals</span>
+        </div>
+        <div className="grid gap-px sm:grid-cols-2 lg:grid-cols-4">
+          {statItems.map((item) => (
+            <div key={item.key} className="flex min-h-32 flex-col justify-between bg-card p-5">
+              <item.icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              <div>
+                <p className="text-3xl font-semibold tabular-nums">
+                  {stats ? stats[item.key].toLocaleString() : "—"}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">{item.label}</p>
+              </div>
             </div>
+          ))}
+          <div className="flex min-h-32 flex-col justify-between bg-foreground p-5 text-background">
+            <Activity className="h-4 w-4 text-background/60" aria-hidden="true" />
             <div>
-              <p className="text-2xl font-bold tabular-nums">
-                {stats ? (stats[card.key as keyof DashboardStats] as number).toLocaleString() : "—"}
-              </p>
-              <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
-                {card.label}
+              <p className="text-sm font-medium">Operational foundation</p>
+              <p className="mt-1 text-xs leading-5 text-background/65">
+                Roles and access controls are active.
               </p>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      </section>
 
-      <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-      <div className="grid md:grid-cols-3 gap-4">
-        {quickLinks.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className="group p-5 rounded-lg border bg-card hover:border-primary/50 hover:shadow-sm transition-all"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold group-hover:text-primary transition-colors">
-                  {link.title}
-                </h3>
-                <p className="text-xs text-muted-foreground mt-1">{link.description}</p>
+      <div className="mt-7 grid gap-7 lg:grid-cols-[1.2fr_0.8fr]">
+        <section className="rounded-xl border bg-card" aria-labelledby="management-title">
+          <div className="border-b px-5 py-4">
+            <h2 id="management-title" className="font-semibold">Management</h2>
+            <p className="mt-1 text-xs text-muted-foreground">Open a system workspace</p>
+          </div>
+          <div className="divide-y">
+            {managementLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="group flex items-center justify-between gap-4 px-5 py-5 outline-none transition-colors hover:bg-muted/60 focus-visible:bg-muted"
+              >
+                <span>
+                  <span className="block text-sm font-medium">{link.title}</span>
+                  <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+                    {link.description}
+                  </span>
+                </span>
+                <ArrowUpRight
+                  className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-foreground"
+                  aria-hidden="true"
+                />
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="rounded-xl border bg-card" aria-labelledby="roles-title">
+          <div className="border-b px-5 py-4">
+            <h2 id="roles-title" className="font-semibold">Access distribution</h2>
+            <p className="mt-1 text-xs text-muted-foreground">Users by assigned role</p>
+          </div>
+          <div className="divide-y px-5">
+            {USER_ROLES.map((role) => (
+              <div key={role} className="flex items-center justify-between py-4 text-sm">
+                <span className="text-muted-foreground">{ROLE_LABELS[role]}</span>
+                <span className="font-semibold tabular-nums">
+                  {stats?.users_by_role?.[role]?.toLocaleString() ?? "0"}
+                </span>
               </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-            </div>
-          </Link>
-        ))}
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );

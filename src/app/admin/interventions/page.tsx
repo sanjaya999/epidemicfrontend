@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { adminService } from "@/services/admin.service";
+import type { AdminInterventionFilters } from "@/services/admin.service";
 import type { AdminIntervention } from "@/types/admin";
 import { getErrorMessage } from "@/lib/error";
 
@@ -25,13 +26,13 @@ export default function AdminInterventionsPage() {
 
   const fetchInterventions = useCallback(async () => {
     try {
-      const params: Record<string, unknown> = {
+      const params: AdminInterventionFilters = {
         skip: page * PAGE_SIZE,
         limit: PAGE_SIZE,
       };
       if (search) params.search = search;
 
-      const res = await adminService.getInterventions(params as any);
+      const res = await adminService.getInterventions(params);
       if (res.data) setInterventions(res.data);
       setTotal(res.total);
     } catch (err) {

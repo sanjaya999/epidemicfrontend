@@ -15,8 +15,8 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EpidemicSim",
-  description: "Epidemic spread simulator",
+  title: "EpiWatch",
+  description: "Community outbreak surveillance and response support",
 };
 
 import { Toaster } from "@/components/ui/sonner";

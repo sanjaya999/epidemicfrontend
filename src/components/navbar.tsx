@@ -13,7 +13,7 @@ export function Navbar() {
         <div className="flex justify-between h-16 items-center">
           <div className="flex items-center gap-8">
             <Link href="/" className="text-xl font-bold tracking-tight text-primary">
-              EpidemicSim
+              EpiWatch
             </Link>
           </div>
 
