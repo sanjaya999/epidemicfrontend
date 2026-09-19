@@ -33,6 +33,9 @@ export const surveillanceService = {
 
   getOutbreak: (id: number) => api.get<OutbreakResponse>(`/outbreaks/${id}`),
 
+  generateForecast: (id: number) =>
+    api.post<OutbreakResponse>(`/outbreaks/${id}/forecast`),
+
   resolveOutbreak: (id: number) =>
     api.post<OutbreakResponse>(`/outbreaks/${id}/resolve`),
 };

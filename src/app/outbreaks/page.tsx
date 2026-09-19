@@ -10,8 +10,11 @@ import { getErrorMessage } from "@/lib/error";
 import { surveillanceService } from "@/services/surveillance.service";
 import type { Outbreak, OutbreakStatus } from "@/types/surveillance";
 
-const filters: Array<{ label: string; value: "" | OutbreakStatus }> = [
-  { label: "Open", value: "suspected" },
+type QueueFilter = "open" | "" | OutbreakStatus;
+
+const filters: Array<{ label: string; value: QueueFilter }> = [
+  { label: "Open", value: "open" },
+  { label: "Suspected", value: "suspected" },
   { label: "Active", value: "active" },
   { label: "Monitoring", value: "monitoring" },
   { label: "Resolved", value: "resolved" },
@@ -24,16 +27,20 @@ function statusLabel(status: OutbreakStatus) {
 
 export default function OutbreaksPage() {
   const [outbreaks, setOutbreaks] = useState<Outbreak[]>([]);
-  const [filter, setFilter] = useState<"" | OutbreakStatus>("suspected");
+  const [filter, setFilter] = useState<QueueFilter>("open");
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const response = await surveillanceService.getOutbreaks(
-        filter ? { status: filter } : undefined
+        filter && filter !== "open" ? { status: filter } : undefined
       );
-      setOutbreaks(response.data);
+      setOutbreaks(
+        filter === "open"
+          ? response.data.filter((item) => item.status !== "resolved")
+          : response.data
+      );
     } catch (error) {
       toast.error(getErrorMessage(error, "Failed to load outbreaks"));
     } finally {
@@ -106,7 +113,7 @@ export default function OutbreaksPage() {
                   <th className="px-5 py-3 font-medium">Location</th>
                   <th className="px-5 py-3 font-medium">Organization</th>
                   <th className="px-5 py-3 text-right font-medium">Detection evidence</th>
-                  <th className="px-5 py-3 font-medium">Status</th>
+                  <th className="px-5 py-3 font-medium">Risk / status</th>
                   <th className="px-5 py-3 text-right font-medium">Review</th>
                 </tr>
               </thead>
@@ -126,10 +133,17 @@ export default function OutbreaksPage() {
                       </p>
                     </td>
                     <td className="px-5 py-4">
-                      <span className="inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs font-medium">
-                        <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                        {statusLabel(outbreak.status)}
-                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {outbreak.risk_level && (
+                          <span className="rounded-full bg-primary px-2.5 py-1 text-xs font-medium capitalize text-primary-foreground">
+                            {outbreak.risk_level} risk
+                          </span>
+                        )}
+                        <span className="inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs font-medium">
+                          <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                          {statusLabel(outbreak.status)}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-5 py-4 text-right">
                       <Button asChild variant="ghost" size="sm">

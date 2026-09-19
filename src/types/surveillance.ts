@@ -95,10 +95,78 @@ export interface Outbreak {
   disease_name: string;
   status: OutbreakStatus;
   risk_level: RiskLevel | null;
+  risk_evidence: RiskEvidence | null;
+  latest_simulation_id: number | null;
   detected_at: string;
   resolved_at: string | null;
   trigger_evidence: TriggerEvidence;
   updated_at: string;
+}
+
+export interface RiskEvidence {
+  method: "response_capacity" | "population_fallback";
+  projected_peak_active: number;
+  peak_day: number;
+  projected_peak_date: string;
+  population: number;
+  response_capacity: number | null;
+  capacity_ratio: number | null;
+  peak_population_percent: number;
+  thresholds: {
+    moderate: number;
+    high: number;
+    critical: number;
+    unit: string;
+  };
+  explanation: string;
+  forecast_simulation_id: number;
+}
+
+export interface OutbreakForecast {
+  id: number;
+  model_type: "SIR" | "SEIR";
+  parameters: {
+    population: number;
+    initial_infected: number;
+    initial_exposed: number | null;
+    days: number;
+    beta: number;
+    gamma: number;
+    sigma: number | null;
+  };
+  input_snapshot: {
+    source_report_id: number;
+    source_report_date: string;
+    location_name: string;
+    population: number;
+    response_capacity: number | null;
+    disease_name: string;
+    model_type: "SIR" | "SEIR";
+    assumed_r0: number;
+    infectious_days: number;
+    incubation_days: number | null;
+    forecast_days: number;
+    initial_infected: number;
+    initial_exposed: number | null;
+    beta: number;
+    gamma: number;
+    sigma: number | null;
+  };
+  stats: {
+    r0: number;
+    herd_immunity_threshold: number;
+    peak_infected: number;
+    peak_day: number;
+    total_infected: number;
+  };
+  data: {
+    days: number[];
+    susceptible: number[];
+    infected: number[];
+    recovered: number[];
+    exposed: number[] | null;
+  };
+  created_at: string;
 }
 
 export interface AuditEvent {
@@ -112,6 +180,7 @@ export interface AuditEvent {
 export interface OutbreakDetail extends Outbreak {
   reports: CaseReport[];
   activity: AuditEvent[];
+  forecast: OutbreakForecast | null;
 }
 
 export interface OutbreaksResponse {
