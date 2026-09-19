@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth-provider";
 import { Logo } from "@/components/logo";
 import { getEffectiveRole, ROLE_LABELS } from "@/lib/roles";
+import { alertService } from "@/services/alert.service";
 import {
   LayoutDashboard,
   Folder,
@@ -24,6 +26,8 @@ import {
   Users,
   ClipboardPlus,
   Siren,
+  BellRing,
+  RadioTower,
 } from "lucide-react";
 
 const sidebarItems = [
@@ -63,10 +67,31 @@ export function Sidebar() {
   const pathname = usePathname();
   const { user, isLoading, logout } = useAuth();
   const role = user ? getEffectiveRole(user) : null;
+  const [unreadAlerts, setUnreadAlerts] = useState(0);
   const canReport = role === "reporter" || role === "health_officer" || role === "admin";
   const canManageOutbreaks = role === "health_officer" || role === "admin";
 
   const isAuthPage = pathname === "/login" || pathname === "/register";
+
+  const loadUnreadAlerts = useCallback(async () => {
+    if (!user) {
+      setUnreadAlerts(0);
+      return;
+    }
+    try {
+      const response = await alertService.getNotifications({ unread_only: true });
+      setUnreadAlerts(response.unread_count);
+    } catch {
+      setUnreadAlerts(0);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    loadUnreadAlerts();
+    const refresh = () => void loadUnreadAlerts();
+    window.addEventListener("notifications:changed", refresh);
+    return () => window.removeEventListener("notifications:changed", refresh);
+  }, [loadUnreadAlerts, pathname]);
 
   if (isAuthPage) return null;
 
@@ -120,6 +145,62 @@ export function Sidebar() {
                 <span className="hidden md:inline">Outbreaks</span>
               </Link>
             )}
+          </div>
+        )}
+        {user && (
+          <div className="space-y-1">
+            <Link
+              href="/alerts"
+              aria-label="Alerts"
+              title="Alerts"
+              className={cn(
+                "group flex items-center justify-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors md:justify-start",
+                pathname.startsWith("/alerts")
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <span className="relative">
+                <BellRing className="h-4 w-4" />
+                {unreadAlerts > 0 && (
+                  <span
+                    className={cn(
+                      "absolute -right-1.5 -top-1.5 h-2 w-2 rounded-full ring-2 md:hidden",
+                      pathname.startsWith("/alerts")
+                        ? "bg-primary-foreground ring-primary"
+                        : "bg-foreground ring-background"
+                    )}
+                  />
+                )}
+              </span>
+              <span className="hidden flex-1 md:inline">Alerts</span>
+              {unreadAlerts > 0 && (
+                <span
+                  className={cn(
+                    "hidden min-w-5 rounded-full px-1.5 py-0.5 text-center font-mono text-[10px] md:inline",
+                    pathname.startsWith("/alerts")
+                      ? "bg-primary-foreground text-primary"
+                      : "bg-primary text-primary-foreground"
+                  )}
+                >
+                  {unreadAlerts > 99 ? "99+" : unreadAlerts}
+                </span>
+              )}
+            </Link>
+            <Link
+              href="/subscriptions"
+              aria-label="Alert subscriptions"
+              title="Alert subscriptions"
+              className={cn(
+                "group flex items-center justify-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors md:justify-start",
+                pathname.startsWith("/subscriptions")
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <RadioTower className="h-4 w-4" />
+              <span className="hidden md:inline">Subscriptions</span>
+            </Link>
           </div>
         )}
         {sidebarItems.map((item) => {

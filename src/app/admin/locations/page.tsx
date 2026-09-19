@@ -188,7 +188,6 @@ export default function LocationsPage() {
                 id="location-name"
                 value={form.name}
                 onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                placeholder="Ward 5"
               />
             </div>
             <div className="space-y-2">
@@ -213,7 +212,6 @@ export default function LocationsPage() {
                 min="1"
                 value={form.population}
                 onChange={(event) => setForm((current) => ({ ...current, population: event.target.value }))}
-                placeholder="50000"
               />
             </div>
             <div className="space-y-2">
@@ -224,7 +222,6 @@ export default function LocationsPage() {
                 min="0"
                 value={form.response_capacity}
                 onChange={(event) => setForm((current) => ({ ...current, response_capacity: event.target.value }))}
-                placeholder="Optional active-case capacity"
               />
             </div>
           </div>

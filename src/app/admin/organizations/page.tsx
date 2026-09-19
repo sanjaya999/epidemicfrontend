@@ -140,7 +140,6 @@ export default function OrganizationsPage() {
                 id="organization-name"
                 value={form.name}
                 onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                placeholder="Kathmandu Metropolitan Health Office"
               />
             </div>
             <div className="space-y-2">

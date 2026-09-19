@@ -133,7 +133,7 @@ export default function SimulatePage() {
                 <Info size={12} className="text-muted-foreground/30" />
               </div>
               <Input
-                placeholder="e.g. baseline_run_v1"
+                placeholder="Name this scenario"
                 value={form.name}
                 className={cn(
                   "h-12 bg-muted/40 border-none px-4 focus-visible:ring-1 focus-visible:ring-primary/20",

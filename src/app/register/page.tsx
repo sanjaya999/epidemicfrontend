@@ -42,7 +42,7 @@ export default function RegisterPage() {
     setServerError("");
     try {
       await authService.register(data);
-      toast.success("Account created! Please sign in.");
+      toast.success("Account created. Sign in to continue.");
       router.push("/login");
     } catch (err) {
       // Map backend field-level validation errors to form fields
@@ -70,7 +70,7 @@ export default function RegisterPage() {
             Create account
           </h1>
           <p className="text-sm text-gray-500">
-            Join us by entering your details below
+            Create an account to follow local outbreak alerts and save simulations.
           </p>
         </div>
 
@@ -87,11 +87,13 @@ export default function RegisterPage() {
               <Label htmlFor="username">Username</Label>
               <Input
                 id="username"
-                placeholder="johndoe"
                 {...register("username")}
                 className={errors.username ? "border-red-500 focus-visible:ring-red-500" : ""}
                 autoComplete="username"
               />
+              {!errors.username && (
+                <p className="text-xs text-gray-500">Use at least 3 characters.</p>
+              )}
               {errors.username && (
                 <p className="text-xs font-medium text-red-500">{errors.username.message}</p>
               )}
@@ -102,7 +104,6 @@ export default function RegisterPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="name@example.com"
                 {...register("email")}
                 className={errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}
                 autoComplete="email"
@@ -117,11 +118,13 @@ export default function RegisterPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="••••••••"
                 {...register("password")}
                 className={errors.password ? "border-red-500 focus-visible:ring-red-500" : ""}
                 autoComplete="new-password"
               />
+              {!errors.password && (
+                <p className="text-xs text-gray-500">Use at least 6 characters.</p>
+              )}
               {errors.password && (
                 <p className="text-xs font-medium text-red-500">{errors.password.message}</p>
               )}

@@ -196,7 +196,6 @@ export default function DiseaseProfilesPage() {
                 id="disease-name"
                 value={form.name}
                 onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                placeholder="Seasonal influenza"
               />
             </div>
             <div className="space-y-2">
@@ -243,7 +242,6 @@ export default function DiseaseProfilesPage() {
                 step="0.01"
                 value={form.default_r0}
                 onChange={(event) => setForm((current) => ({ ...current, default_r0: event.target.value }))}
-                placeholder="2.5"
               />
             </div>
             <div className="space-y-2">
@@ -256,7 +254,6 @@ export default function DiseaseProfilesPage() {
                 step="0.1"
                 value={form.infectious_days}
                 onChange={(event) => setForm((current) => ({ ...current, infectious_days: event.target.value }))}
-                placeholder="7"
               />
             </div>
             <div className="space-y-2">
@@ -270,7 +267,7 @@ export default function DiseaseProfilesPage() {
                 disabled={form.model_type === "SIR"}
                 value={form.incubation_days}
                 onChange={(event) => setForm((current) => ({ ...current, incubation_days: event.target.value }))}
-                placeholder={form.model_type === "SIR" ? "Not used by SIR" : "3"}
+                placeholder={form.model_type === "SIR" ? "Not applicable" : undefined}
               />
             </div>
             <div className="space-y-2">
@@ -319,7 +316,6 @@ export default function DiseaseProfilesPage() {
                 step="0.01"
                 value={form.incidence_per_100k}
                 onChange={(event) => setForm((current) => ({ ...current, incidence_per_100k: event.target.value }))}
-                placeholder="Leave empty if unused"
               />
             </div>
           </div>

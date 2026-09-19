@@ -278,7 +278,7 @@ export default function SimulationDetailPage() {
               <div className="space-y-4">
                 <div className="space-y-2 max-w-sm">
                   <Label>Intervention Set Name</Label>
-                  <Input value={interventionName} onChange={e => setInterventionName(e.target.value)} placeholder="e.g. COVID + lockdown" />
+                  <Input value={interventionName} onChange={e => setInterventionName(e.target.value)} placeholder="Name this intervention set" />
                 </div>
                 
                 <div className="space-y-4 border-t border-border pt-4">

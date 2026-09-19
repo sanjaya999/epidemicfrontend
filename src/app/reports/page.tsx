@@ -143,6 +143,10 @@ export default function ReportsPage() {
             ...counts,
           });
       setDetection(response.detection ?? null);
+      if (response.detection?.triggered) {
+        window.dispatchEvent(new Event("notifications:changed"));
+        window.dispatchEvent(new Event("alert:created"));
+      }
       toast.success(editing ? "Report corrected" : "Report saved");
       setEditing(null);
       setForm(emptyForm());

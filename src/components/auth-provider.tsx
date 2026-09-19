@@ -12,6 +12,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { authService } from "@/services/auth.service";
 import { useUserStore } from "@/store/use-user-store";
 import type { User } from "@/types/auth";
+import { UnreadAlertNotifier } from "@/components/unread-alert-notifier";
 
 interface AuthContextValue {
   user: User | null;
@@ -86,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
       }}
     >
+      <UnreadAlertNotifier user={user} />
       {children}
     </AuthContext.Provider>
   );

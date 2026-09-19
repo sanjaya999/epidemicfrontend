@@ -124,7 +124,7 @@ export function SimulationForm() {
       <div className="space-y-1.5">
         <Label>Simulation Name</Label>
         <Input
-          placeholder="e.g. COVID baseline run"
+          placeholder="Name this scenario"
           value={form.name}
           onChange={(e) => handleChange("name", e.target.value)}
         />
@@ -205,7 +205,6 @@ export function SimulationForm() {
               <Input
                 type="number"
                 step="0.01"
-                placeholder="e.g. 0.2"
                 value={form.sigma ?? ""}
                 onChange={(e) =>
                   handleChange(
@@ -219,7 +218,6 @@ export function SimulationForm() {
               <Label>Initial Exposed</Label>
               <Input
                 type="number"
-                placeholder="0"
                 value={form.initial_exposed ?? ""}
                 onChange={(e) =>
                   handleChange(

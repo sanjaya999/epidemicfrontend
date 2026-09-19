@@ -45,7 +45,7 @@ export default function LoginPage() {
       // Fetch and store the user so the UI updates immediately
       const meResponse = await authService.getMe();
       setUser(meResponse.data ?? null);
-      toast.success("Welcome back!");
+      toast.success("Signed in");
       const redirect = new URLSearchParams(window.location.search).get("redirect") || "/";
       router.push(redirect);
     } catch (err) {
@@ -64,7 +64,7 @@ export default function LoginPage() {
             Sign in
           </h1>
           <p className="text-sm text-gray-500">
-            Enter your details to access your account
+            Use the email and password registered with your account.
           </p>
         </div>
 
@@ -82,7 +82,6 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="name@example.com"
                 {...register("email")}
                 className={errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}
                 autoComplete="email"
@@ -97,7 +96,6 @@ export default function LoginPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="••••••••"
                 {...register("password")}
                 className={errors.password ? "border-red-500 focus-visible:ring-red-500" : ""}
                 autoComplete="current-password"

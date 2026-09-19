@@ -10,6 +10,7 @@ import {
   FileClock,
   RefreshCw,
   ShieldAlert,
+  BellRing,
 } from "lucide-react";
 import { toast } from "sonner";
 import { OutbreakForecastChart } from "@/components/outbreak-forecast-chart";
@@ -23,6 +24,12 @@ function humanizeAction(action: string) {
     "outbreak.detected": "Detection rule created this incident",
     "outbreak.evidence_updated": "Detection evidence was updated",
     "forecast.generated": "Forecast and risk level were generated",
+    "alert.created": "An internal alert was prepared",
+    "alert.updated": "The internal alert was updated",
+    "alert.published": "The alert was published",
+    "alert.resolved": "The alert was resolved",
+    "alert.expired": "The alert expired",
+    "notification.acknowledged": "A recipient acknowledged the alert",
     "outbreak.resolved": "Incident was resolved",
   };
   return labels[action] ?? action.replaceAll(".", " ");
@@ -117,6 +124,11 @@ export default function OutbreakDetailPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <Link href="/alerts">
+              <BellRing className="mr-2 h-4 w-4" /> Manage alerts
+            </Link>
+          </Button>
           <Button onClick={generateForecast} disabled={generating}>
             <RefreshCw className={`mr-2 h-4 w-4 ${generating ? "animate-spin" : ""}`} />
             {generating ? "Generating..." : forecast ? "Update forecast" : "Generate forecast"}
