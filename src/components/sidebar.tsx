@@ -22,6 +22,8 @@ import {
   MapPin,
   Microscope,
   Users,
+  ClipboardPlus,
+  Siren,
 } from "lucide-react";
 
 const sidebarItems = [
@@ -61,6 +63,8 @@ export function Sidebar() {
   const pathname = usePathname();
   const { user, isLoading, logout } = useAuth();
   const role = user ? getEffectiveRole(user) : null;
+  const canReport = role === "reporter" || role === "health_officer" || role === "admin";
+  const canManageOutbreaks = role === "health_officer" || role === "admin";
 
   const isAuthPage = pathname === "/login" || pathname === "/register";
 
@@ -81,6 +85,43 @@ export function Sidebar() {
       </div>
 
       <div className="flex-1 py-5 px-2 md:px-4 space-y-2 overflow-y-auto">
+        {canReport && (
+          <div className="mb-4 space-y-1 border-b border-border pb-4">
+            <p className="hidden px-3 pb-1 text-[10px] font-semibold tracking-wide text-muted-foreground md:block">
+              Surveillance
+            </p>
+            <Link
+              href="/reports"
+              aria-label="Case reports"
+              title="Case reports"
+              className={cn(
+                "group flex items-center justify-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors md:justify-start",
+                pathname.startsWith("/reports")
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <ClipboardPlus className="h-4 w-4" />
+              <span className="hidden md:inline">Case reports</span>
+            </Link>
+            {canManageOutbreaks && (
+              <Link
+                href="/outbreaks"
+                aria-label="Outbreaks"
+                title="Outbreaks"
+                className={cn(
+                  "group flex items-center justify-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors md:justify-start",
+                  pathname.startsWith("/outbreaks")
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <Siren className="h-4 w-4" />
+                <span className="hidden md:inline">Outbreaks</span>
+              </Link>
+            )}
+          </div>
+        )}
         {sidebarItems.map((item) => {
           const isActive = item.href === "/simulations"
             ? pathname.startsWith("/simulations") || pathname.startsWith("/simulate")
