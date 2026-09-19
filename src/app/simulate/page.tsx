@@ -63,6 +63,8 @@ export default function SimulatePage() {
   }
 
   async function handleSubmit() {
+    if (isLoading) return;
+
     const rawData = {
       ...form,
       population: parseFloat(form.population),
@@ -101,7 +103,7 @@ export default function SimulatePage() {
           created_at: response.data.created_at,
         });
         toast.success("Simulation completed");
-        router.push(`/simulations/${response.data.id}`);
+        window.location.assign(`/simulations/${response.data.id}`);
       }
     } catch (err) {
       toast.error(getErrorMessage(err, "Failed to run simulation. Please try again."));
