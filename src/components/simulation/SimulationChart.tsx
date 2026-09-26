@@ -68,7 +68,7 @@ export function SimulationChart({ data, modelType, interventionData, merge, heig
     <ResponsiveContainer width="100%" height={height}>
       <LineChart
         data={chartData}
-        margin={{ top: 8, right: 16, left: 0, bottom: 8 }}
+        margin={{ top: 8, right: 16, left: 14, bottom: 24 }}
       >
         <CartesianGrid
           strokeDasharray="3 3"
@@ -81,19 +81,28 @@ export function SimulationChart({ data, modelType, interventionData, merge, heig
           axisLine={{ stroke: "hsl(var(--border))" }}
           tickLine={false}
           label={{
-            value: "Days",
+            value: "Days since simulation start",
             position: "insideBottom",
-            offset: -4,
+            offset: -10,
             fill: "hsl(var(--muted-foreground))",
             fontSize: 11,
           }}
+          height={48}
         />
         <YAxis
           tickFormatter={formatPopulation}
           tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
           axisLine={false}
           tickLine={false}
-          width={48}
+          width={72}
+          label={{
+            value: "Number of people",
+            angle: -90,
+            position: "insideLeft",
+            fill: "hsl(var(--muted-foreground))",
+            fontSize: 11,
+            style: { textAnchor: "middle" },
+          }}
         />
         <Tooltip
           contentStyle={{

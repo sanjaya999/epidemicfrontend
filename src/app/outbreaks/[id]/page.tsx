@@ -11,12 +11,14 @@ import {
   RefreshCw,
   ShieldAlert,
   BellRing,
+  ClipboardCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { OutbreakForecastChart } from "@/components/outbreak-forecast-chart";
 import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/error";
 import { surveillanceService } from "@/services/surveillance.service";
+import { responsePlanService } from "@/services/response-plan.service";
 import type { OutbreakDetail } from "@/types/surveillance";
 
 function humanizeAction(action: string) {
@@ -30,6 +32,12 @@ function humanizeAction(action: string) {
     "alert.resolved": "The alert was resolved",
     "alert.expired": "The alert expired",
     "notification.acknowledged": "A recipient acknowledged the alert",
+    "response_plan.created": "A response plan was opened",
+    "response_scenario.created": "A response scenario was calculated",
+    "response_plan.approved": "A response scenario was approved",
+    "response_action.created": "A response action was assigned",
+    "response_action.updated": "A response action was updated",
+    "response_plan.completed": "All response actions were closed",
     "outbreak.resolved": "Incident was resolved",
   };
   return labels[action] ?? action.replaceAll(".", " ");
@@ -43,6 +51,7 @@ export default function OutbreakDetailPage() {
   const [loading, setLoading] = useState(true);
   const [resolving, setResolving] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [planning, setPlanning] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -86,6 +95,25 @@ export default function OutbreakDetailPage() {
     }
   }
 
+  async function openResponsePlan() {
+    setPlanning(true);
+    try {
+      const existing = await responsePlanService.getByOutbreak(outbreakId);
+      if (existing.data.length > 0) {
+        router.push(`/response-plans/${existing.data[0].id}`);
+        return;
+      }
+      const response = await responsePlanService.create(outbreakId);
+      if (response.data) {
+        router.push(`/response-plans/${response.data.id}`);
+      }
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to open response plan"));
+    } finally {
+      setPlanning(false);
+    }
+  }
+
   if (loading || !outbreak) {
     return (
       <div className="w-full space-y-5 p-5 md:p-8">
@@ -124,6 +152,12 @@ export default function OutbreakDetailPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {forecast && outbreak.status !== "resolved" && (
+            <Button variant="outline" onClick={openResponsePlan} disabled={planning}>
+              <ClipboardCheck className="mr-2 h-4 w-4" />
+              {planning ? "Opening..." : "Response plan"}
+            </Button>
+          )}
           <Button asChild variant="outline">
             <Link href="/alerts">
               <BellRing className="mr-2 h-4 w-4" /> Manage alerts

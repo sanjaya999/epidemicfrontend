@@ -28,6 +28,7 @@ import {
   Siren,
   BellRing,
   RadioTower,
+  ClipboardCheck,
 } from "lucide-react";
 
 const sidebarItems = [
@@ -130,20 +131,36 @@ export function Sidebar() {
               <span className="hidden md:inline">Case reports</span>
             </Link>
             {canManageOutbreaks && (
-              <Link
-                href="/outbreaks"
-                aria-label="Outbreaks"
-                title="Outbreaks"
-                className={cn(
-                  "group flex items-center justify-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors md:justify-start",
-                  pathname.startsWith("/outbreaks")
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-              >
-                <Siren className="h-4 w-4" />
-                <span className="hidden md:inline">Outbreaks</span>
-              </Link>
+              <>
+                <Link
+                  href="/outbreaks"
+                  aria-label="Outbreaks"
+                  title="Outbreaks"
+                  className={cn(
+                    "group flex items-center justify-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors md:justify-start",
+                    pathname.startsWith("/outbreaks")
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  <Siren className="h-4 w-4" />
+                  <span className="hidden md:inline">Outbreaks</span>
+                </Link>
+                <Link
+                  href="/response-plans"
+                  aria-label="Response plans"
+                  title="Response plans"
+                  className={cn(
+                    "group flex items-center justify-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors md:justify-start",
+                    pathname.startsWith("/response-plans")
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  <ClipboardCheck className="h-4 w-4" />
+                  <span className="hidden md:inline">Response plans</span>
+                </Link>
+              </>
             )}
           </div>
         )}

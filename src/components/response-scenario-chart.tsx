@@ -11,28 +11,35 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { OutbreakForecast } from "@/types/surveillance";
+import type { SimulationData } from "@/types/simulation";
 
 const CHART_COLORS = {
   infected: "var(--color-infected, #ef4444)",
-  exposed: "var(--color-exposed, #f59e0b)",
   capacity: "#64748b",
 };
 
-interface OutbreakForecastChartProps {
-  forecast: OutbreakForecast;
+interface ResponseScenarioChartProps {
+  baseline: SimulationData;
+  scenario?: SimulationData;
   capacity: number | null;
 }
 
 function compactNumber(value: number) {
-  return new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(value);
+  return new Intl.NumberFormat("en", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
 }
 
-export function OutbreakForecastChart({ forecast, capacity }: OutbreakForecastChartProps) {
-  const points = forecast.data.days.map((day, index) => ({
+export function ResponseScenarioChart({
+  baseline,
+  scenario,
+  capacity,
+}: ResponseScenarioChartProps) {
+  const points = baseline.days.map((day, index) => ({
     day,
-    active: Math.round(forecast.data.infected[index] ?? 0),
-    exposed: forecast.data.exposed ? Math.round(forecast.data.exposed[index] ?? 0) : undefined,
+    baseline: Math.round(baseline.infected[index] ?? 0),
+    scenario: scenario ? Math.round(scenario.infected[index] ?? 0) : undefined,
   }));
 
   return (
@@ -44,8 +51,14 @@ export function OutbreakForecastChart({ forecast, capacity }: OutbreakForecastCh
           tickLine={false}
           axisLine={{ stroke: "var(--border)" }}
           tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+          label={{
+            value: "Days from latest case report",
+            position: "insideBottom",
+            offset: -10,
+            fill: "var(--muted-foreground)",
+            fontSize: 11,
+          }}
           height={48}
-          label={{ value: "Days from latest case report", position: "insideBottom", offset: -10, fill: "var(--muted-foreground)", fontSize: 11 }}
         />
         <YAxis
           width={72}
@@ -54,7 +67,7 @@ export function OutbreakForecastChart({ forecast, capacity }: OutbreakForecastCh
           tickFormatter={compactNumber}
           tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
           label={{
-            value: "Number of people",
+            value: "Number of active cases",
             angle: -90,
             position: "insideLeft",
             fill: "var(--muted-foreground)",
@@ -71,7 +84,7 @@ export function OutbreakForecastChart({ forecast, capacity }: OutbreakForecastCh
           contentStyle={{
             background: "var(--card)",
             border: "1px solid var(--border)",
-            borderRadius: 6,
+            borderRadius: 4,
             color: "var(--foreground)",
             fontSize: 12,
           }}
@@ -89,29 +102,35 @@ export function OutbreakForecastChart({ forecast, capacity }: OutbreakForecastCh
             y={capacity}
             stroke={CHART_COLORS.capacity}
             strokeDasharray="6 5"
-            label={{ value: `Response capacity: ${capacity.toLocaleString()}`, position: "insideTopRight", fill: CHART_COLORS.capacity, fontSize: 11 }}
-          />
-        )}
-        {forecast.model_type === "SEIR" && forecast.data.exposed && (
-          <Line
-            type="monotone"
-            name="Projected exposed"
-            dataKey="exposed"
-            stroke={CHART_COLORS.exposed}
-            strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 3, fill: CHART_COLORS.exposed }}
+            label={{
+              value: `Response capacity: ${capacity.toLocaleString()}`,
+              position: "insideTopRight",
+              fill: CHART_COLORS.capacity,
+              fontSize: 11,
+            }}
           />
         )}
         <Line
           type="monotone"
-          name="Projected active cases"
-          dataKey="active"
+          name="Active cases — no intervention"
+          dataKey="baseline"
           stroke={CHART_COLORS.infected}
           strokeWidth={2.5}
           dot={false}
           activeDot={{ r: 3, fill: CHART_COLORS.infected }}
         />
+        {scenario && (
+          <Line
+            type="monotone"
+            name="Active cases — response scenario"
+            dataKey="scenario"
+            stroke={CHART_COLORS.infected}
+            strokeWidth={2}
+            strokeDasharray="6 5"
+            dot={false}
+            activeDot={{ r: 3, fill: CHART_COLORS.infected }}
+          />
+        )}
       </LineChart>
     </ResponsiveContainer>
   );
