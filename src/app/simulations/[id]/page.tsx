@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Check, Sparkles, X, CircleDot } from "lucide-react";
+import { ArrowLeft, Plus, Check, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -212,20 +212,6 @@ export default function SimulationDetailPage() {
               </div>
             </div>
           </div>
-
-          <Button
-            variant="outline"
-            onClick={() =>
-              router.push(
-                `/lab?sim=${simulation.id}${
-                  selectedIntervention ? `&intervention=${selectedIntervention.id}` : ""
-                }`
-              )
-            }
-          >
-            <CircleDot size={16} className="mr-2" />
-            View as dots
-          </Button>
         </div>
 
         {/* Stats Grid */}

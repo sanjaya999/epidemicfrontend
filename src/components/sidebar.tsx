@@ -13,7 +13,6 @@ import {
   LayoutDashboard,
   Folder,
   FlaskConical,
-  CircleDot,
   LogOut,
   LogIn,
   UserPlus,
@@ -41,11 +40,6 @@ const sidebarItems = [
     title: "Model library",
     href: "/simulations",
     icon: FlaskConical,
-  },
-  {
-    title: "Outbreak Lab",
-    href: "/lab",
-    icon: CircleDot,
   },
   {
     title: "My scenarios",
